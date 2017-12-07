@@ -3,9 +3,9 @@ package deserialize
 import (
 	"testing"
 	"io/ioutil"
-	"github.com/shankj3/ocelot/util/test"
 	pb "github.com/shankj3/ocelot/protos/out"
 	"bytes"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 
 const TestOcelot = "test-fixtures/ocelot.yml"
