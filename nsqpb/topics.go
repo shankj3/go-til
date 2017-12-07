@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/shankj3/ocelot/protos/out"
-	"github.com/shankj3/ocelot/util/ocelog"
 	"net/http"
 )
 
@@ -59,7 +58,7 @@ func LookupTopic(nsqdLookupHostPort string, topic string) bool {
 	nsqdLookupAddr := fmt.Sprintf("http://%s/lookup?topic=%s", nsqdLookupHostPort, topic)
 	resp, err := http.Get(nsqdLookupAddr)
 	if err != nil {
-		ocelog.IncludeErrField(err).Fatalf("Error on looking up topic! %s", err)
+		return false
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		return false
