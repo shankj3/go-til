@@ -28,7 +28,7 @@ func DefaultProducer() (producer *PbProduce, err error){
 	return
 }
 
-// Writes any struct to a topic, you better implement UnmarshalAndProcess good in your producer, giiiiirl
+// Writes any struct to a topic, you better implement UnmarshalAndProcess good in your consumer, giiiiirl
 func (p *PbProduce) WriteAny(someStruct interface{}, topicName string) error {
 	//TODO: buffer cleanup??
 	var buf bytes.Buffer
