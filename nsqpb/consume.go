@@ -2,7 +2,8 @@ package nsqpb
 
 import (
     "github.com/nsqio/go-nsq"
-    "github.com/shankj3/ocelot/util/ocelog"
+
+    "bitbucket.org/level11consulting/go-til/log"
 )
 
 // ProtoConsume wraps nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
@@ -34,9 +35,9 @@ func NewProtoConsume() *ProtoConsume {
 
 // NSQProtoConsume is a wrapper for `p.Handler.UnmarshalAndProcess` --> `nsq.HandlerFunc`
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
-	ocelog.Log().Debug("Inside wrapper for UnmarshalAndProcess")
+	log.Log().Debug("Inside wrapper for UnmarshalAndProcess")
     if err := p.Handler.UnmarshalAndProcess(msg.Body); err != nil {
-        ocelog.IncludeErrField(err).Warn("nsq proto consume error")
+        log.IncludeErrField(err).Warn("nsq proto consume error")
         return err
     }
     return nil
@@ -46,10 +47,10 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 // a wrapper as a handler for the consumer. The ip address of the NSQLookupd instance
 // can be set by the environment variable NSQLOOKUPD_IP, but will default to 127.0.0.1
 func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) error {
-	ocelog.Log().Debug("Inside Consume Messages")
+    log.Log().Debug("Inside Consume Messages")
     c, err := nsq.NewConsumer(topicName, channelName, p.DecodeConfig)
     if err != nil {
-        ocelog.IncludeErrField(err).Warn("cannot create nsq consumer")
+        log.IncludeErrField(err).Warn("cannot create nsq consumer")
         return err
     }
 	p.StopChan = c.StopChan
@@ -57,7 +58,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
 
     if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {
-        ocelog.IncludeErrField(err).Warn("cannot connect to nsq")
+        log.IncludeErrField(err).Warn("cannot connect to nsq")
         return err
     }
     return nil

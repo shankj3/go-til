@@ -3,9 +3,9 @@ package nsqpb
 import (
 	"github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
-    "github.com/shankj3/ocelot/util/ocelog"
 	"bytes"
 	"encoding/gob"
+	"bitbucket.org/level11consulting/go-til/log"
 )
 
 
@@ -24,7 +24,7 @@ func DefaultProducer() (producer *PbProduce, err error){
 	if err != nil {
 		return
 	}
-	producer.Producer.SetLogger(NewNSQLoggerAtLevel(ocelog.GetLogLevel()))
+	producer.Producer.SetLogger(NewNSQLoggerAtLevel(log.GetLogLevel()))
 	return
 }
 
@@ -40,13 +40,13 @@ func (p *PbProduce) WriteAny(someStruct interface{}, topicName string) error {
 	}
 
 	if err != nil {
-		ocelog.IncludeErrField(err).Warn("proto marshal error")
+		log.IncludeErrField(err).Warn("proto marshal error")
 		return err
 	}
-	ocelog.Log().Debug("publishing data to ", topicName)
+	log.Log().Debug("publishing data to ", topicName)
 	err = p.Producer.Publish(topicName, buf.Bytes())
 	if err != nil {
-		ocelog.IncludeErrField(err).Error("could not publish to nsq!")
+		log.IncludeErrField(err).Error("could not publish to nsq!")
 	}
 	return err
 }
@@ -59,13 +59,13 @@ func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
     var data []byte
     data, err := proto.Marshal(message)
     if err != nil {
-        ocelog.IncludeErrField(err).Warn("proto marshal error")
+        log.IncludeErrField(err).Warn("proto marshal error")
         return err
     }
-    ocelog.Log().Debug("publishing data to ", topicName)
+    log.Log().Debug("publishing data to ", topicName)
     err = p.Producer.Publish(topicName, data)
     if err != nil {
-    	ocelog.IncludeErrField(err).Error("could not publish to nsq!")
+    	log.IncludeErrField(err).Error("could not publish to nsq!")
 	}
     return err
 }
@@ -77,7 +77,7 @@ func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
 func GetInitProducer() *PbProduce {
 	first, err := DefaultProducer()
 	if err != nil {
-		ocelog.IncludeErrField(err).Fatal("Producer must be initialized.")
+		log.IncludeErrField(err).Fatal("Producer must be initialized.")
 	}
 	return first
 }

@@ -1,10 +1,10 @@
 package nsqpb
 
 import (
-	"github.com/shankj3/ocelot/util/ocelog"
 	"github.com/nsqio/go-nsq"
 	"github.com/sirupsen/logrus"
 	"strings"
+	"bitbucket.org/level11consulting/go-til/log"
 )
 
 func ConvertLogLevel(level logrus.Level) nsq.LogLevel {
@@ -31,7 +31,7 @@ var (
 type NSQLogger struct{}
 
 func NewNSQLogger() (logger NSQLogger, level nsq.LogLevel) {
-	return NewNSQLoggerAtLevel(ocelog.GetLogLevel())
+	return NewNSQLoggerAtLevel(log.GetLogLevel())
 }
 
 func NewNSQLoggerAtLevel(lvl logrus.Level) (logger NSQLogger, level nsq.LogLevel){
@@ -45,15 +45,15 @@ func (n NSQLogger) Output(_ int, s string) error {
 		msg := strings.TrimSpace(s[3:])
 		switch s[:3] {
 		case nsqDebugLevel:
-			ocelog.Log().Debugln(msg)
+			log.Log().Debugln(msg)
 		case nsqInfoLevel:
-			ocelog.Log().Infoln(msg)
+			log.Log().Infoln(msg)
 		case nsqWarnLevel:
-			ocelog.Log().Warnln(msg)
+			log.Log().Warnln(msg)
 		case nsqErrLevel:
-			ocelog.Log().Errorln(msg)
+			log.Log().Errorln(msg)
 		default:
-			ocelog.Log().Infoln(msg)
+			log.Log().Infoln(msg)
 		}
 	}
 	return nil

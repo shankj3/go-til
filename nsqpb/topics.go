@@ -15,6 +15,8 @@ const (
 	Build = "build"
 )
 
+//TODO: put this somewhere else - this needs to live in ocelot
+
 var SupportedTopics = [2]string{PushTopic, PRTopic}
 
 // extends proto.Message interface
