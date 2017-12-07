@@ -2,7 +2,6 @@ package nsqpb
 
 import (
     "github.com/nsqio/go-nsq"
-
     "bitbucket.org/level11consulting/go-til/log"
 )
 
@@ -15,6 +14,8 @@ type ProtoConsume struct {
     DecodeConfig *nsq.Config
     Config 		 *NsqConfig
     StopChan 	 chan int
+
+    topics  []string
 }
 
 // HandleMessage is an interface for unmarshalling your messages to a struct or protobuf message,
@@ -63,3 +64,24 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     }
     return nil
 }
+
+// Adds a supported topic to store on consumer
+func (p *ProtoConsume) AddTopic(supportedTopic string) {
+    p.topics = append(p.topics, supportedTopic)
+}
+
+// Retrieves all consumer supported topics
+func (p *ProtoConsume) GetTopics() []string {
+    return p.topics
+}
+
+//TODO: does it matter to add a bool for pass/fail
+func (p *ProtoConsume) DeleteTopic(toRemove string) {
+    for i, t := range p.topics {
+        if t == toRemove {
+            p.topics = append(p.topics[:i], p.topics[i+1:]...)
+            break
+        }
+    }
+}
+
