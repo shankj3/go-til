@@ -3,9 +3,9 @@ package net
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
-	"github.com/shankj3/ocelot/util/test"
 	"net/http/httptest"
 	"testing"
+	"bitbucket.org/level11consulting/go-til/test"
 )
 func TestJSONApiError(t *testing.T){
 	w := httptest.NewRecorder()

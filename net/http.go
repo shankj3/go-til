@@ -1,8 +1,6 @@
 package net
 
 import (
-	"github.com/meatballhat/negroni-logrus"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	"net/http"
 )

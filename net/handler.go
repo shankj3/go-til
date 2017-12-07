@@ -2,7 +2,6 @@ package net
 
 import (
 	"encoding/json"
-	"github.com/shankj3/ocelot/util/ocelog"
 	"net/http"
 )
 
@@ -10,7 +9,6 @@ import (
 // are written RESTError struct and encoded to JSON, written to response writer.
 // Also logs the error using ocelog
 func JSONApiError(w http.ResponseWriter, statusCode int, errorDesc string, err error) {
-	ocelog.IncludeErrField(err).Error(errorDesc)
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	restErr := ApiHttpError{
