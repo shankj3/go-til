@@ -3,8 +3,6 @@ package nsqpb
 import (
 	"github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
-	"bytes"
-	"encoding/gob"
 	"bitbucket.org/level11consulting/go-til/log"
 )
 
@@ -26,29 +24,6 @@ func DefaultProducer() (producer *PbProduce, err error){
 	}
 	producer.Producer.SetLogger(NewNSQLoggerAtLevel(log.GetLogLevel()))
 	return
-}
-
-// Writes any struct to a topic, you better implement UnmarshalAndProcess good in your consumer, giiiiirl
-func (p *PbProduce) WriteAny(someStruct interface{}, topicName string) error {
-	//TODO: buffer cleanup??
-	var buf bytes.Buffer
-
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(someStruct)
-	if err != nil {
-		return err
-	}
-
-	if err != nil {
-		log.IncludeErrField(err).Warn("proto marshal error")
-		return err
-	}
-	log.Log().Debug("publishing data to ", topicName)
-	err = p.Producer.Publish(topicName, buf.Bytes())
-	if err != nil {
-		log.IncludeErrField(err).Error("could not publish to nsq!")
-	}
-	return err
 }
 
 // Write Protobuf Message to an NSQ topic with name topicName
