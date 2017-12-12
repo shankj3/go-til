@@ -80,7 +80,7 @@ func TestDeserializer_JSONToProto(t *testing.T) {
 
 type BuildConfig struct {
 	Image string
-	BuildTool string
+	BuildTool string	`yaml:"buildTool"`
 	Packages []string
 	Env map[string]string
 	Before BuildStage
