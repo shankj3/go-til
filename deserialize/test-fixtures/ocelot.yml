@@ -1,4 +1,5 @@
 image: test
+buildTool: maven
 packages:
   - tsss
   - xss
