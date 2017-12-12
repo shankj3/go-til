@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"net/http"
-	"github.com/shankj3/ocelot/admin/models"
 	"golang.org/x/oauth2/clientcredentials"
 	"bitbucket.org/level11consulting/go-til/log"
 )
@@ -21,7 +20,7 @@ var (
 	FileNotFound = errors.New("could not find raw data at url")
 )
 
-//HttpClient is a client containing a pre-authenticated http client as returned by
+//HttpClient is an http client interface that you can implement.
 type HttpClient interface {
 	//GetUrl will perform a GET on the specified URL and return the appropriate protobuf response
 	GetUrl(url string, unmarshalObj proto.Message) error
@@ -42,26 +41,32 @@ type OAuthClient struct {
 	Unmarshaler jsonpb.Unmarshaler
 }
 
+type OAuthClientCreds interface {
+	GetClientId() string
+	GetClientSecret() string
+	GetTokenURL() string
+}
+
 //Setup takes in OAuth2 credentials
-func (oc *OAuthClient) Setup(config *models.Credentials) error {
+func (oc *OAuthClient) Setup(config OAuthClientCreds) error {
 	var conf = clientcredentials.Config {
-		ClientID:     config.ClientId,
-		ClientSecret: config.ClientSecret,
-		TokenURL:     config.TokenURL,
+		ClientID:     config.GetClientId(),
+		ClientSecret: config.GetClientSecret(),
+		TokenURL:     config.GetTokenURL(),
 	}
 	var ctx = context.Background()
 	_, err := conf.Token(ctx)
 	if err != nil {
-		log.IncludeErrField(err).Error("Unable to retrieve token for " + config.Type + "/" + config.AcctName)
+		log.IncludeErrField(err).Error("Unable to retrieve token for " + config.GetClientId() + " at " + config.GetTokenURL())
 		return err
 	}
 
-	bbClient := conf.Client(ctx)
+	authClient := conf.Client(ctx)
 
 	oc.Unmarshaler = jsonpb.Unmarshaler{
 		AllowUnknownFields: true,
 	}
-	oc.AuthClient = *bbClient
+	oc.AuthClient = *authClient
 	return err
 }
 
