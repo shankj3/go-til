@@ -23,6 +23,9 @@ func TestDeserializer_YAMLToStruct(t *testing.T) {
 	if len(ocelot.Packages) != 2 {
 		t.Error(test.IntFormatErrors("docker package list size", 2, len(ocelot.Packages)))
 	}
+	if ocelot.BuildTool != "maven" {
+		t.Error(test.StrFormatErrors("build tool", "maven", ocelot.BuildTool))
+	}
 	if ocelot.Env["BUILD_DEBUG"] != "1" {
 		t.Error(test.StrFormatErrors("build debug value in global env", "1", ocelot.Env["BUILD_DEBUG"]))
 	}
@@ -77,6 +80,7 @@ func TestDeserializer_JSONToProto(t *testing.T) {
 
 type BuildConfig struct {
 	Image string
+	BuildTool string	`yaml:"buildTool"`
 	Packages []string
 	Env map[string]string
 	Before BuildStage
