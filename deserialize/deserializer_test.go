@@ -3,9 +3,9 @@ package deserialize
 import (
 	"testing"
 	"io/ioutil"
-	pb "github.com/shankj3/ocelot/protos/out"
 	"bytes"
 	"bitbucket.org/level11consulting/go-til/test"
+	dtest "bitbucket.org/level11consulting/go-til/deserialize/test-fixtures"
 )
 
 const TestOcelot = "test-fixtures/ocelot.yml"
@@ -14,7 +14,7 @@ const TestRepos = "test-fixtures/repo.json"
 func TestDeserializer_YAMLToStruct(t *testing.T) {
 	testOcelot, _ := ioutil.ReadFile(TestOcelot)
 	d := New()
-	ocelot := &pb.BuildConfig{}
+	ocelot := &BuildConfig{}
 	d.YAMLToStruct(testOcelot, ocelot)
 
 	if ocelot.Image != "test" {
@@ -22,6 +22,9 @@ func TestDeserializer_YAMLToStruct(t *testing.T) {
 	}
 	if len(ocelot.Packages) != 2 {
 		t.Error(test.IntFormatErrors("docker package list size", 2, len(ocelot.Packages)))
+	}
+	if ocelot.BuildTool != "maven" {
+		t.Error(test.StrFormatErrors("build tool", "maven", ocelot.BuildTool))
 	}
 	if ocelot.Env["BUILD_DEBUG"] != "1" {
 		t.Error(test.StrFormatErrors("build debug value in global env", "1", ocelot.Env["BUILD_DEBUG"]))
@@ -42,7 +45,7 @@ func TestDeserializer_YAMLToStruct(t *testing.T) {
 }
 
 func TestDeserializer_JSONToProto(t *testing.T) {
-	repositories := &pb.PaginatedRepository{}
+	repositories := &dtest.PaginatedRepository{}
 	testRepo, _ := ioutil.ReadFile(TestRepos)
 	d := New()
 	d.JSONToProto(ioutil.NopCloser(bytes.NewReader(testRepo)), repositories)
@@ -71,4 +74,20 @@ func TestDeserializer_JSONToProto(t *testing.T) {
 	if repositories.Values[0].Links.Hooks.Href != "https://api.bitbucket.org/2.0/repositories/mariannefeng/test-ocelot/hooks" {
 		t.Error(test.StrFormatErrors("webhook", "https://api.bitbucket.org/2.0/repositories/mariannefeng/test-ocelot/hooks", repositories.Values[0].Links.Hooks.Href))
 	}
+}
+
+/// below are test structs for deserializer tests ///
+
+type BuildConfig struct {
+	Image string
+	BuildTool string	`yaml:"buildTool"`
+	Packages []string
+	Env map[string]string
+	Before BuildStage
+	After BuildStage
+}
+
+type BuildStage struct {
+	Env map[string]string
+	Script []string
 }
