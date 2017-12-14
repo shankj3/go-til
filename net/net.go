@@ -47,18 +47,18 @@ type OAuthClientCreds interface {
 	GetTokenURL() string
 }
 
-//Setup takes in OAuth2 credentials
-func (oc *OAuthClient) Setup(config OAuthClientCreds) error {
+//Setup takes in OAuth2 credentials and returns a temporary token along with an error
+func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error){
 	var conf = clientcredentials.Config {
 		ClientID:     config.GetClientId(),
 		ClientSecret: config.GetClientSecret(),
 		TokenURL:     config.GetTokenURL(),
 	}
 	var ctx = context.Background()
-	_, err := conf.Token(ctx)
+	token, err := conf.Token(ctx)
 	if err != nil {
 		log.IncludeErrField(err).Error("Unable to retrieve token for " + config.GetClientId() + " at " + config.GetTokenURL())
-		return err
+		return "", err
 	}
 
 	authClient := conf.Client(ctx)
@@ -67,7 +67,7 @@ func (oc *OAuthClient) Setup(config OAuthClientCreds) error {
 		AllowUnknownFields: true,
 	}
 	oc.AuthClient = *authClient
-	return err
+	return token.AccessToken, err
 }
 
 
