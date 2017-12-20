@@ -41,7 +41,7 @@ func TestConsulet_CreateNewSemaphore(t *testing.T) {
 }
 
 func TestConsulet_Connections(t *testing.T) {
-	brokenConsul, _ := Default()
+	brokenConsul, _ := New("wjld", 234)
 	brokenConsul.RegisterService("abc", 1234, "")
 	if brokenConsul.Connected {
 		t.Error(test.GenericStrFormatErrors("broken connection", false, brokenConsul.Connected))
