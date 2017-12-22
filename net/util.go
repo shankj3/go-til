@@ -29,8 +29,6 @@ func (ah *AppContextHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ah.H(ah.Ctx, w, r)
 }
 
-
-
 // testable interface for using websockets
 type WebsocketEy interface {
 	SetWriteDeadline(t time.Time) error
