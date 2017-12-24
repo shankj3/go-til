@@ -140,5 +140,9 @@ func (consul *Consulet) updateConnection(err error) {
 	//assumes that
 	if err == nil || (err != nil && !strings.Contains(err.Error(), "getsockopt: connection refused")) {
 		consul.Connected = true
+	} else {
+		consul.Connected = false
+		// connection errors are happening
+		fmt.Println("changing connected to false")
 	}
 }
