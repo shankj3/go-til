@@ -143,6 +143,6 @@ func (consul *Consulet) updateConnection(err error) {
 	} else {
 		consul.Connected = false
 		// connection errors are happening
-		fmt.Println("changing connected to false")
+		fmt.Println("changing connected to false, err: ", err.Error())
 	}
 }
