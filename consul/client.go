@@ -137,11 +137,8 @@ func (consul *Consulet) checkIfConnected() {
 //updateConnection takes in an error message and will update the Connection bool to be false if we get connection refused error.
 //Also logs error if exists. TODO? Can add a new field to Consulet struct showing most recent failure's error message
 func (consul *Consulet) updateConnection(err error) {
-	if err != nil {
-		if strings.Contains(err.Error(), "getsockopt: connection refused") {
-			consul.Connected = false
-		}
-	} else {
+	//assumes that
+	if err == nil || (err != nil && !strings.Contains(err.Error(), "getsockopt: connection refused")) {
 		consul.Connected = true
 	}
 }
