@@ -85,6 +85,14 @@ func (consul *Consulet) RemoveValue(key string) error {
 	return err
 }
 
+// Remove values at specified prefix (like `consul kv delete -recurse /prefix`)
+func (consul *Consulet) RemoveValues(prefix string) error {
+	kv := consul.Client.KV()
+	_, err := kv.DeleteTree(prefix, nil)
+	consul.updateConnection(err)
+	return err
+}
+
 //GetKeyValue gets key/value at specified key
 func (consul *Consulet) GetKeyValue(key string) (*api.KVPair, error) {
 	kv := consul.Client.KV()
