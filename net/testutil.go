@@ -35,6 +35,19 @@ func (ws *testWebSocketConn) GetData() [][]byte {
 	return ws.MsgData
 }
 
+func (ws *testWebSocketConn) SendIt(data []byte) error {
+	err := ws.WriteMessage(0, data)
+	return err
+}
+
+func (ws *testWebSocketConn) SendError(errorDesc []byte) {
+
+}
+
+func (ws *testWebSocketConn) Finish() {
+
+}
+
 func NewWebSocketConn() *testWebSocketConn {
 	var data [][]byte
 	return &testWebSocketConn{

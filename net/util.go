@@ -3,6 +3,7 @@ package net
 import (
 	"net/http"
 	"time"
+	"github.com/gorilla/websocket"
 )
 
 // for initializing connections / configurations once, then passing it around for lifetime of application
@@ -34,4 +35,41 @@ type WebsocketEy interface {
 	SetWriteDeadline(t time.Time) error
 	WriteMessage(messageType int, data []byte) error
 	Close() error
+}
+
+
+
+// Upgrade returns an OcenetWs object with a websocket connection upgraded by the ResponseWriter and the request
+func Upgrade(upgrader websocket.Upgrader, w http.ResponseWriter, r *http.Request) (*OcenetWs, error) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &OcenetWs{cxn: conn}, nil
+}
+
+// fulfills the Streamable interface in ocelot
+type OcenetWs struct {
+	cxn *websocket.Conn
+}
+
+func (ws *OcenetWs) SendIt(data []byte) error {
+	if err := ws.cxn.WriteMessage(websocket.TextMessage, data); err != nil {
+		ws.cxn.Close()
+		return err
+	}
+	return nil
+}
+
+func (ws *OcenetWs) SendError(errorDesc []byte) {
+	ws.cxn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	ws.cxn.WriteMessage(websocket.TextMessage, []byte("ERROR!\n"))
+	ws.cxn.WriteMessage(websocket.TextMessage, errorDesc)
+	ws.cxn.Close()
+}
+
+func (ws *OcenetWs) Finish() {
+	ws.cxn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	ws.cxn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	ws.cxn.Close()
 }
