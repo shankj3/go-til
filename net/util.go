@@ -68,7 +68,8 @@ func (ws *OcenetWs) SendError(errorDesc []byte) {
 	ws.cxn.Close()
 }
 
-func (ws *OcenetWs) Finish() {
+func (ws *OcenetWs) Finish(done chan int) {
+	close(done)
 	ws.cxn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	ws.cxn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	ws.cxn.Close()
