@@ -19,7 +19,7 @@ var userdata = []struct{
 	{"test4", "17"},
 }
 
-func testSetupVaultAndAuthClient(t *testing.T) (oce *Vaulty, ln net.Listener) {
+func testSetupVaultAndAuthClient(t *testing.T) (oce Vaulty, ln net.Listener) {
 	core, _, token := vault.TestCoreUnsealed(t)
 	ln, addr := http.TestServer(t, core)
 	os.Setenv("VAULT_ADDR", addr)

@@ -27,7 +27,16 @@ var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 //	Write(path string, data map[string]interface{}) (*api.Secret, error)
 //}
 
-type Vaulty struct {
+
+type Vaulty interface {
+	AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error)
+	GetUserAuthData(user string) (map[string]interface{}, error)
+	CreateToken(request *api.TokenCreateRequest) (token string, err error)
+	CreateThrowawayToken() (token string, err error)
+	CreateVaultPolicy() error
+}
+
+type VaultyImpl struct {
 	Client	*api.Client
 	Config	*api.Config
 }
@@ -35,7 +44,7 @@ type Vaulty struct {
 
 // Use this function as a singleton essentially.
 // todo,  flesh out docs, for now look at hookhandler for use.
-func GetInitVault(once sync.Once, vaultCached *Vaulty) (*Vaulty, error) {
+func GetInitVault(once sync.Once, vaultCached Vaulty) (Vaulty, error) {
 	once.Do(func() {
 		ocev, err := NewEnvAuthClient()
 		if err != nil {
@@ -49,39 +58,39 @@ func GetInitVault(once sync.Once, vaultCached *Vaulty) (*Vaulty, error) {
 
 // NewEnvAuthedClient will set the Client token based on the environment variable `$VAULT_TOKEN`.
 // Will return error if it is not set. Returns configured ocevault struct
-func NewEnvAuthClient() (*Vaulty, error) {
+func NewEnvAuthClient() (Vaulty, error) {
 	var token string
 	if token = os.Getenv("VAULT_TOKEN"); token == "" {
-		return &Vaulty{}, errors.New("$VAULT_TOKEN not set")
+		return &VaultyImpl{}, errors.New("$VAULT_TOKEN not set")
 	}
 	return NewAuthedClient(token)
 }
 
 // NewAuthedClient will return a client with default configurations and the Token attached to it.
 // Vault URL configured through VAULT_ADDR environment variable.
-func NewAuthedClient(token string) (val *Vaulty, err error) {
-	val = &Vaulty{}
-	val.Config = api.DefaultConfig()
-	val.Client, err = api.NewClient(val.Config)
+func NewAuthedClient(token string) (val Vaulty, err error) {
+	valImpl := &VaultyImpl{}
+	valImpl.Config = api.DefaultConfig()
+	valImpl.Client, err = api.NewClient(valImpl.Config)
 	if err != nil {
-		return
+		return valImpl, nil
 	}
-	val.Client.SetToken(token)
+	valImpl.Client.SetToken(token)
 	// this action is idempotent, and since we *need* this policy for generating tokens, might as well?
 	// i guess?
-	val.CreateVaultPolicy()
-	return
+	valImpl.CreateVaultPolicy()
+	return valImpl, nil
 }
 
 // AddUserAuthData will add the values of the data map to the path of the CI user creds
 // CI vault path set off of base path VaultCIPath
-func (val *Vaulty) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error){
+func (val *VaultyImpl) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error){
 	return val.Client.Logical().Write(fmt.Sprintf(VaultCIPath, user), data)
 }
 
 // GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
 // key-value fields that were set on it
-func (val *Vaulty) GetUserAuthData(user string) (map[string]interface{}, error){
+func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, error){
 	path := fmt.Sprintf(VaultCIPath, user)
 	secret, err := val.Client.Logical().Read(path)
 	if err != nil {
@@ -95,7 +104,7 @@ func (val *Vaulty) GetUserAuthData(user string) (map[string]interface{}, error){
 
 // CreateToken creates an Auth token using the val.Client's creds. Look at api.TokenCreateRequest docs
 // for how to configure the token. Will return any errors from the create request.
-func (val *Vaulty) CreateToken(request *api.TokenCreateRequest) (token string, err error) {
+func (val *VaultyImpl) CreateToken(request *api.TokenCreateRequest) (token string, err error) {
 	secret, err := val.Client.Auth().Token().Create(request)
 	if err != nil {
 		return
@@ -108,7 +117,7 @@ func (val *Vaulty) CreateToken(request *api.TokenCreateRequest) (token string, e
 // *single use* really means enough uses to initialize the client and make one call to actually
 // get data
 // todo: add ocevault policy for reading the secrets/ci/user path
-func (val *Vaulty) CreateThrowawayToken() (token string, err error) {
+func (val *VaultyImpl) CreateThrowawayToken() (token string, err error) {
 	tokenReq := &api.TokenCreateRequest{
 		//Policies: 		[]string{"ocevault"}, // todo: figure out why this doesn't work...
 		TTL:            "30m",
@@ -120,7 +129,7 @@ func (val *Vaulty) CreateThrowawayToken() (token string, err error) {
 
 // CreateVaultPolicy creates a policy for r/w ops on only the path that credentials are on, which is `secret/ci/creds`.
 // Tokens that are one-off and passed to the workers for building will get this access.
-func (val *Vaulty) CreateVaultPolicy() error {
+func (val *VaultyImpl) CreateVaultPolicy() error {
 	err := val.Client.Sys().PutPolicy("ocevault", "path \"secret/ci/creds\" {\n capabilities = [\"read\", \"list\"]\n}")
 	if err != nil {
 		return err
