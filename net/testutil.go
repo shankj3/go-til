@@ -44,7 +44,7 @@ func (ws *testWebSocketConn) SendError(errorDesc []byte) {
 
 }
 
-func (ws *testWebSocketConn) Finish() {
+func (ws *testWebSocketConn) Finish(chan int) {
 
 }
 
