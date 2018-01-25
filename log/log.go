@@ -111,7 +111,7 @@ func getCaller() (method string) {
 		fullFuncName := runtime.FuncForPC(pcs[i]).Name()
 		pkg := getPackageName(fullFuncName)
 		// If the caller isn't part of this package, we're done
-		if pkg != LogrusPackage && !strings.Contains(fullFuncName, "ocelog") && !strings.Contains(fullFuncName, "getCaller") {
+		if pkg != LogrusPackage && !strings.Contains(fullFuncName, "go-til/log") && !strings.Contains(fullFuncName, "getCaller") {
 			return fullFuncName
 		}
 	}
