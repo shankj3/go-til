@@ -32,6 +32,7 @@ type Vaulty interface {
 	AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error)
 	GetUserAuthData(user string) (map[string]interface{}, error)
 	AddVaultData(path string, data map[string]interface{}) (*api.Secret, error)
+	GetVaultData(path string) (map[string]interface{}, error)
 	CreateToken(request *api.TokenCreateRequest) (token string, err error)
 	CreateThrowawayToken() (token string, err error)
 	CreateVaultPolicy() error
@@ -95,10 +96,7 @@ func (val *VaultyImpl) AddVaultData(path string, data map[string]interface{}) (*
 	return val.Client.Logical().Write(path, data)
 }
 
-// GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
-// key-value fields that were set on it
-func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, error){
-	path := fmt.Sprintf(VaultCIPath, user)
+func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error){
 	secret, err := val.Client.Logical().Read(path)
 	if err != nil {
 		return nil, err
@@ -107,6 +105,13 @@ func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, err
 		return nil, fmt.Errorf("user data not found, path searched: %s", path)
 	}
 	return secret.Data, nil
+}
+
+// GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
+// key-value fields that were set on it
+func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, error){
+	path := fmt.Sprintf(VaultCIPath, user)
+	return val.GetVaultData(path)
 }
 
 // CreateToken creates an Auth token using the val.Client's creds. Look at api.TokenCreateRequest docs
