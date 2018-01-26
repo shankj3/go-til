@@ -31,6 +31,7 @@ var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 type Vaulty interface {
 	AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error)
 	GetUserAuthData(user string) (map[string]interface{}, error)
+	AddVaultData(path string, data map[string]interface{}) (*api.Secret, error)
 	CreateToken(request *api.TokenCreateRequest) (token string, err error)
 	CreateThrowawayToken() (token string, err error)
 	CreateVaultPolicy() error
@@ -86,6 +87,12 @@ func NewAuthedClient(token string) (val Vaulty, err error) {
 // CI vault path set off of base path VaultCIPath
 func (val *VaultyImpl) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error){
 	return val.Client.Logical().Write(fmt.Sprintf(VaultCIPath, user), data)
+}
+
+// AddUserAuthData will add the values of the data map to the path of the CI user creds
+// CI vault path set off of base path VaultCIPath
+func (val *VaultyImpl) AddVaultData(path string, data map[string]interface{}) (*api.Secret, error){
+	return val.Client.Logical().Write(path, data)
 }
 
 // GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
