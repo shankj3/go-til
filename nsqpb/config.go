@@ -26,6 +26,8 @@ type NsqConfig struct {
 	NsqdPort	   string
 	NsqLookupdPort string
 	MaxInFlight    int
+	TouchInterval  int
+	Timeout        int64 // seconds
 }
 
 
@@ -59,6 +61,8 @@ func DefaultNsqConf() *NsqConfig {
 		NsqdPort:       defaultNsqdPort,  // can change these to be configurable later
 		NsqLookupdPort: defaultLookupDPort,  // can change these to be configurable later.
 		MaxInFlight:    5,
+		TouchInterval:  15,
+		Timeout:        30,
 	}
 
 }

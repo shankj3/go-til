@@ -5,6 +5,7 @@ import (
     "bitbucket.org/level11consulting/go-til/log"
 	"fmt"
 	"runtime/debug"
+	"time"
 )
 
 // ProtoConsume wraps nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
@@ -24,7 +25,7 @@ type ProtoConsume struct {
 // HandleMessage is an interface for unmarshalling your messages to a struct or protobuf message,
 // then processing the object. Fulfilling this interface is how you would interact w/ the nsq channels
 type HandleMessage interface {
-	UnmarshalAndProcess([]byte) error
+	UnmarshalAndProcess([]byte, chan int) error
 }
 
 func defaultMsgRecovery(message *nsq.Message) {
@@ -50,9 +51,11 @@ func defaultConsumerRecovery() {
 // nsqpb configuration. also sets default message recovery and consumer recovery functions
 func NewProtoConsume() *ProtoConsume {
     config := nsq.NewConfig()
+    nsqpbConf := DefaultNsqConf()
+    config.MsgTimeout = time.Second * time.Duration(nsqpbConf.Timeout)
     return &ProtoConsume{
         DecodeConfig:     config,
-        Config:           DefaultNsqConf(),
+        Config:           nsqpbConf,
         MessageRecovery:  defaultMsgRecovery,
         ConsumerRecovery: defaultConsumerRecovery,
     }
@@ -61,13 +64,19 @@ func NewProtoConsume() *ProtoConsume {
 // NSQProtoConsume is a wrapper for `p.Handler.UnmarshalAndProcess` --> `nsq.HandlerFunc`
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 	defer p.MessageRecovery(msg)
-	// todo: panic recovery here. there should just be MessageRecovery(msg *nsq.Message) func attached to ProtoConsume obj
+	done := make(chan int)
 	log.Log().Debug("Inside wrapper for UnmarshalAndProcess")
-    if err := p.Handler.UnmarshalAndProcess(msg.Body); err != nil {
-        log.IncludeErrField(err).Warn("nsq proto consume error")
-        return err
-    }
-    return nil
+    go p.Handler.UnmarshalAndProcess(msg.Body, done)
+    for {
+    	select {
+    	case <-done:
+    		fmt.Println("GOT A DONE!")
+    		return nil
+    	default:
+    		time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))
+    		msg.Touch()
+		}
+	}
 }
 
 // Consume messages on a given topic / channel in NSQ protoconsume's UnmarshalProtoFunc will be added with
@@ -81,10 +90,11 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
         log.IncludeErrField(err).Warn("cannot create nsq consumer")
         return err
     }
-    log.Log().Debugf("Changing max in flight to %d", p.Config.MaxInFlight)
-    c.ChangeMaxInFlight(p.Config.MaxInFlight)
+    log.Log().Debugf("Changing max in flight to %d", p.Config.MaxInFlight + 3)
+    c.ChangeMaxInFlight(p.Config.MaxInFlight+3)
 	p.StopChan = c.StopChan
     c.SetLogger(NSQLogger{}, nsq.LogLevelError)
+    //c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
     c.AddConcurrentHandlers(nsq.HandlerFunc(p.NSQProtoConsume), p.Config.MaxInFlight)
 
     if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {
