@@ -25,6 +25,7 @@ type NsqConfig struct {
 	NsqdIp		   string
 	NsqdPort	   string
 	NsqLookupdPort string
+	MaxInFlight    int
 }
 
 
@@ -57,6 +58,7 @@ func DefaultNsqConf() *NsqConfig {
 		NsqdIp: 	    nsqd,
 		NsqdPort:       defaultNsqdPort,  // can change these to be configurable later
 		NsqLookupdPort: defaultLookupDPort,  // can change these to be configurable later.
+		MaxInFlight:    5,
 	}
 
 }
