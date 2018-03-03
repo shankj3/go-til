@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"time"
+	"os"
 )
 
 // ProtoConsume wraps nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
@@ -25,7 +26,7 @@ type ProtoConsume struct {
 // HandleMessage is an interface for unmarshalling your messages to a struct or protobuf message,
 // then processing the object. Fulfilling this interface is how you would interact w/ the nsq channels
 type HandleMessage interface {
-	UnmarshalAndProcess([]byte, chan int) error
+	UnmarshalAndProcess(msg []byte, done chan int, finish chan int) error
 }
 
 func defaultMsgRecovery(message *nsq.Message) {
@@ -34,22 +35,23 @@ func defaultMsgRecovery(message *nsq.Message) {
 		debug.PrintStack()
 		fmt.Println("going to try to requeue")
 		message.Requeue(0)
+		os.Exit(1)
 	}
-	//todo: should we exit out? still let the consumer die?
+
 }
 
 func defaultConsumerRecovery() {
 	if r := recover(); r != nil {
 		fmt.Println("OOOHHH MAN, A PANIC HAPPENED!!")
 		debug.PrintStack()
+		os.Exit(1)
 	}
-	//todo: should we exit out? still let the consumer die?
 }
 
 
-// NewProtoConsume returns a new ProtoConsume object with nsq configuration and
+// NewDefaultProtoConsume returns a new ProtoConsume object with nsq configuration and
 // nsqpb configuration. also sets default message recovery and consumer recovery functions
-func NewProtoConsume() *ProtoConsume {
+func NewDefaultProtoConsume() *ProtoConsume {
     config := nsq.NewConfig()
     nsqpbConf := DefaultNsqConf()
     config.MsgTimeout = time.Second * time.Duration(nsqpbConf.Timeout)
@@ -65,12 +67,17 @@ func NewProtoConsume() *ProtoConsume {
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 	defer p.MessageRecovery(msg)
 	done := make(chan int)
+	finish := make(chan int)
 	log.Log().Debug("Inside wrapper for UnmarshalAndProcess")
-    go p.Handler.UnmarshalAndProcess(msg.Body, done)
+    go p.Handler.UnmarshalAndProcess(msg.Body, done, finish)
     for {
     	select {
     	case <-done:
-    		fmt.Println("GOT A DONE!")
+    		log.Log().Info("received on done channel, will stop sending TOUCH commands to nsq")
+    		return nil
+    	case <-finish:
+			log.Log().Info("recieved on finish channel, calling msg.Finish()")
+    		msg.Finish()
     		return nil
     	default:
     		time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))

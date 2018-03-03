@@ -93,6 +93,16 @@ func (consul *Consulet) RemoveValues(prefix string) error {
 	return err
 }
 
+// GetKeys uses consul default of separator ("/")
+func (consul *Consulet) GetKeys(prefix string) (keys []string, err error) {
+	kv := consul.Client.KV()
+	keys, _, err = kv.Keys(prefix, "", nil)
+	if err != nil {
+		return
+	}
+	return
+}
+
 //GetKeyValue gets key/value at specified key
 func (consul *Consulet) GetKeyValue(key string) (*api.KVPair, error) {
 	kv := consul.Client.KV()

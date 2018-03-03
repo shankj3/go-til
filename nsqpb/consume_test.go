@@ -6,7 +6,7 @@ import (
 )
 
 func TestProtoConsume_Topics(t *testing.T) {
-	protoConsumer := NewProtoConsume()
+	protoConsumer := NewDefaultProtoConsume()
 	protoConsumer.AddTopic("marianne1")
 	protoConsumer.AddTopic("marianne2")
 	if len(protoConsumer.GetTopics()) != 2 {
