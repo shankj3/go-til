@@ -9,8 +9,10 @@ import (
 
 var (
 	// environment variables
-	envNsqLookupd = "NSQLOOKUPD_IP"
-	envNsqd		  = "NSQD_IP"
+	envNsqLookupd     = "NSQLOOKUPD_IP"
+	envNsqLookupdPort = "NSQLOOKUPD_PORT"
+	envNsqd		      = "NSQD_IP"
+	envNsqdPort       = "NSQD_PORT"
 
 	// defaults
 	defaultLookupDIP   = "127.0.0.1"
@@ -46,7 +48,7 @@ func (n *NsqConfig) NsqDAddress() string {
 // Searches environment variables for nsqlookupd ip addr and nsqd ip addr. defaults to 127.0.0.1
 // if not found.
 func DefaultNsqConf() *NsqConfig {
-	var nsqlookupd, nsqd string
+	var nsqlookupd, nsqd, nsqlookupdPort, nsqdPort string
 	// NSQLOOKUPD_IP may have to be looked up more than nsqd_ip, since nsqlookupd
 	// likely isn't running everywhere.
 	if nsqlookupd = os.Getenv(envNsqLookupd); nsqlookupd == "" {
@@ -55,11 +57,19 @@ func DefaultNsqConf() *NsqConfig {
 	if nsqd = os.Getenv(envNsqd); nsqd == "" {
 		nsqd = defaultNsqdIP
 	}
+	if nsqlookupdPort = os.Getenv(envNsqLookupdPort); nsqlookupdPort == "" {
+		nsqlookupdPort = defaultLookupDPort
+	}
+
+	if nsqdPort = os.Getenv(envNsqdPort); nsqdPort == "" {
+		nsqdPort = defaultNsqdPort
+	}
+
 	return &NsqConfig{
 		NsqLookupdIp:   nsqlookupd,
 		NsqdIp: 	    nsqd,
-		NsqdPort:       defaultNsqdPort,  // can change these to be configurable later
-		NsqLookupdPort: defaultLookupDPort,  // can change these to be configurable later.
+		NsqdPort:       nsqdPort,
+		NsqLookupdPort: nsqlookupdPort,
 		MaxInFlight:    5,
 		TouchInterval:  15,
 		Timeout:        30,
