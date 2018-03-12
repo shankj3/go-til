@@ -36,6 +36,7 @@ type Vaulty interface {
 	CreateToken(request *api.TokenCreateRequest) (token string, err error)
 	CreateThrowawayToken() (token string, err error)
 	CreateVaultPolicy() error
+	GetAddress() string
 }
 
 type VaultyImpl struct {
@@ -88,6 +89,10 @@ func NewAuthedClient(token string) (val Vaulty, err error) {
 // CI vault path set off of base path VaultCIPath
 func (val *VaultyImpl) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error){
 	return val.Client.Logical().Write(fmt.Sprintf(VaultCIPath, user), data)
+}
+
+func (val *VaultyImpl) GetAddress() string {
+	return val.Client.Address()
 }
 
 // AddUserAuthData will add the values of the data map to the path of the CI user creds
