@@ -20,6 +20,7 @@ type ProtoConsume struct {
     StopChan 	 chan int
 	ConsumerRecovery func()
 	MessageRecovery func(message *nsq.Message)
+	consumers []*nsq.Consumer
 	topics  []string
 }
 
@@ -70,6 +71,7 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 	finish := make(chan int)
 	log.Log().Debug("Inside wrapper for UnmarshalAndProcess")
     go p.Handler.UnmarshalAndProcess(msg.Body, done, finish)
+    // TODO: error for requeing? quizas?
     for {
     	select {
     	case <-done:
@@ -103,13 +105,26 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
     c.SetLogger(NSQLogger{}, nsq.LogLevelError)
     //c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
     c.AddConcurrentHandlers(nsq.HandlerFunc(p.NSQProtoConsume), p.Config.MaxInFlight)
-
+	p.consumers = append(p.consumers, c)
     if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {
         log.IncludeErrField(err).Warn("cannot connect to nsq")
         return err
     }
     return nil
 }
+
+func (p *ProtoConsume) Pause() {
+	for _, consumer := range p.consumers  {
+		consumer.ChangeMaxInFlight(0)
+	}
+}
+
+func (p *ProtoConsume) UnPause() {
+	for _, consumer := range p.consumers {
+		consumer.ChangeMaxInFlight(p.Config.MaxInFlight + 3)
+	}
+}
+
 
 // Adds a supported topic to store on consumer
 func (p *ProtoConsume) AddTopic(supportedTopic string) {

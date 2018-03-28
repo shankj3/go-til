@@ -107,7 +107,7 @@ func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error)
 		return nil, err
 	}
 	if secret == nil {
-		return nil, fmt.Errorf("user data not found, path searched: %s", path)
+		return nil, NotFound(fmt.Sprintf("user data not found, path searched: %s", path))
 	}
 	return secret.Data, nil
 }
@@ -164,3 +164,15 @@ func (val *VaultyImpl) CreateVaultPolicy() error {
 //	v, _ := cli.Logical().Read("secret/booboo")
 //	spew.Dump(v.Data)
 //}
+
+func NotFound(msg string) *ErrNotFound {
+	return &ErrNotFound{msg:msg}
+}
+
+type ErrNotFound struct {
+	msg string
+}
+
+func (e *ErrNotFound) Error() string {
+	return e.msg
+}
