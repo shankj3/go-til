@@ -66,6 +66,7 @@ func NewDefaultProtoConsume() *ProtoConsume {
 
 // NSQProtoConsume is a wrapper for `p.Handler.UnmarshalAndProcess` --> `nsq.HandlerFunc`
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
+	log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("receiving nsq proto msg")
 	defer p.MessageRecovery(msg)
 	done := make(chan int)
 	finish := make(chan int)
@@ -76,10 +77,10 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 		time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))
     	select {
     	case <-done:
-    		log.Log().WithField("id", string(msg.ID[:])).Info("received on done channel, will stop sending TOUCH commands to nsq")
+    		log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("received on done channel, will stop sending TOUCH commands to nsq")
     		return nil
     	case <-finish:
-			log.Log().WithField("id", string(msg.ID[:])).Info("recieved on finish channel, calling msg.Finish()")
+			log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("recieved on finish channel, calling msg.Finish()")
     		msg.Finish()
     		return nil
     	default:
