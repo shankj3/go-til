@@ -73,16 +73,16 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
     go p.Handler.UnmarshalAndProcess(msg.Body, done, finish)
     // TODO: error for requeing? quizas?
     for {
+		time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))
     	select {
     	case <-done:
-    		log.Log().Info("received on done channel, will stop sending TOUCH commands to nsq")
+    		log.Log().WithField("id", string(msg.ID[:])).Info("received on done channel, will stop sending TOUCH commands to nsq")
     		return nil
     	case <-finish:
-			log.Log().Info("recieved on finish channel, calling msg.Finish()")
+			log.Log().WithField("id", string(msg.ID[:])).Info("recieved on finish channel, calling msg.Finish()")
     		msg.Finish()
     		return nil
     	default:
-    		time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))
     		msg.Touch()
 		}
 	}
