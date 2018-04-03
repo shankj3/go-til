@@ -87,16 +87,16 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 				msg.Touch()
 				time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))
 		}
-		//for _, consumer := range p.consumers {
-		//	if consumer.IsStarved() {
-		//		log.Log().Error("the consumer is starved!!")
-		//	}
-		//	stats := consumer.Stats()
-		//	log.Log().WithField("connections",  fmt.Sprintf("%d",stats.Connections)).
-		//		WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
-		//			WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
-		//				WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
-		//}
+		for _, consumer := range p.consumers {
+			//if consumer.IsStarved() {
+			//	log.Log().Error("the consumer is starved!!")
+			//}
+			stats := consumer.Stats()
+			log.Log().WithField("connections",  fmt.Sprintf("%d",stats.Connections)).
+				WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
+					WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
+						WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
+		}
 	}
 }
 
@@ -124,7 +124,7 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
 	p.StopChan = c.StopChan
     c.SetLogger(NSQLogger{}, nsq.LogLevelError)
     //c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
-    c.AddConcurrentHandlers(nsq.HandlerFunc(p.NSQProtoConsume), 3)
+    c.AddConcurrentHandlers(nsq.HandlerFunc(p.NSQProtoConsume), 2)
 	p.consumers = append(p.consumers, c)
     if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {
         log.IncludeErrField(err).Warn("cannot connect to nsq")
