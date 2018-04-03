@@ -111,12 +111,12 @@ func (p *ProtoConsume) ConsumeMessages(topicName string, channelName string) err
         log.IncludeErrField(err).Warn("cannot create nsq consumer")
         return err
     }
-    log.Log().Debugf("Changing max in flight to %d", p.Config.MaxInFlight + 3)
-    c.ChangeMaxInFlight(p.Config.MaxInFlight+3)
+    log.Log().Debugf("Changing max in flight to %d",  3)
+    c.ChangeMaxInFlight(3)
 	p.StopChan = c.StopChan
     c.SetLogger(NSQLogger{}, nsq.LogLevelError)
     //c.AddHandler(nsq.HandlerFunc(p.NSQProtoConsume))
-    c.AddConcurrentHandlers(nsq.HandlerFunc(p.NSQProtoConsume), p.Config.MaxInFlight)
+    c.AddConcurrentHandlers(nsq.HandlerFunc(p.NSQProtoConsume), 3)
 	p.consumers = append(p.consumers, c)
     if err = c.ConnectToNSQLookupd(p.Config.LookupDAddress()); err != nil {
         log.IncludeErrField(err).Warn("cannot connect to nsq")
