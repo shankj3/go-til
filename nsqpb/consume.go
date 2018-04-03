@@ -73,20 +73,19 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 	log.Log().Debug("Inside wrapper for UnmarshalAndProcess")
     go p.Handler.UnmarshalAndProcess(msg.Body, done, finish)
     // TODO: error for requeing? quizas?
-    for {
-		time.Sleep(time.Second * time.Duration(p.Config.TouchInterval))
-		select {
-			case <-done:
-				log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("received on done channel, will stop sending TOUCH commands to nsq")
-				msg.Finish()
-				return nil
-			case <-finish:
-			log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("recieved on finish channel, calling msg.Finish()")
-				msg.Finish()
-				return nil
-			default:
-				msg.Touch()
-		}
+	select {
+		case <-done:
+			log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("received on done channel, will stop sending TOUCH commands to nsq")
+			msg.Finish()
+			return nil
+		case <-finish:
+		log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("recieved on finish channel, calling msg.Finish()")
+			msg.Finish()
+			return nil
+		default:
+			msg.Touch()
+			time.Sleep(time.Millisecond)
+	}
 		//for _, consumer := range p.consumers {
 		//	if consumer.IsStarved() {
 		//		log.Log().Error("the consumer is starved!!")
@@ -97,7 +96,6 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 		//			WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
 		//				WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
 		//}
-	}
 }
 
 func (p *ProtoConsume) GetStats() []*nsq.ConsumerStats {
