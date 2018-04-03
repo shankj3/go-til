@@ -87,6 +87,11 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 			default:
 				msg.Touch()
 		}
+		for _, consumer := range p.consumers {
+			if consumer.IsStarved() {
+				log.Log().Error("the consumer is starved!!")
+			}
+		}
 	}
 }
 
