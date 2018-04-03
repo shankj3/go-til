@@ -91,6 +91,11 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 			if consumer.IsStarved() {
 				log.Log().Error("the consumer is starved!!")
 			}
+			stats := consumer.Stats()
+			log.Log().WithField("connections",  fmt.Sprintf("%d",stats.Connections)).
+				WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
+					WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
+						WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
 		}
 	}
 }
