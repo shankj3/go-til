@@ -87,17 +87,25 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
 			default:
 				msg.Touch()
 		}
-		for _, consumer := range p.consumers {
-			if consumer.IsStarved() {
-				log.Log().Error("the consumer is starved!!")
-			}
-			stats := consumer.Stats()
-			log.Log().WithField("connections",  fmt.Sprintf("%d",stats.Connections)).
-				WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
-					WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
-						WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
-		}
+		//for _, consumer := range p.consumers {
+		//	if consumer.IsStarved() {
+		//		log.Log().Error("the consumer is starved!!")
+		//	}
+		//	stats := consumer.Stats()
+		//	log.Log().WithField("connections",  fmt.Sprintf("%d",stats.Connections)).
+		//		WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
+		//			WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
+		//				WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
+		//}
 	}
+}
+
+func (p *ProtoConsume) GetStats() []*nsq.ConsumerStats {
+	var stats []*nsq.ConsumerStats
+	for _, consumer := range p.consumers {
+		stats = append(stats, consumer.Stats())
+	}
+	return stats
 }
 
 // Consume messages on a given topic / channel in NSQ protoconsume's UnmarshalProtoFunc will be added with
