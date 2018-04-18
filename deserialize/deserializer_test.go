@@ -44,6 +44,18 @@ func TestDeserializer_YAMLToStruct(t *testing.T) {
 	//can we assume parsing looks good if the above values have been set or do I have to write it for all the fields
 }
 
+func TestDeserializer_YamlToProto(t *testing.T) {
+	teste, err := ioutil.ReadFile("./test-fixtures/vcs.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := New()
+	vcs := &dtest.CredWrapper{}
+	err = d.YAMLToProto(teste, vcs)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 func TestDeserializer_JSONToProto(t *testing.T) {
 	repositories := &dtest.PaginatedRepository{}
 	testRepo, _ := ioutil.ReadFile(TestRepos)

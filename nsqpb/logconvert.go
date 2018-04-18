@@ -36,7 +36,8 @@ func NewNSQLogger() (logger NSQLogger, level nsq.LogLevel) {
 
 func NewNSQLoggerAtLevel(lvl logrus.Level) (logger NSQLogger, level nsq.LogLevel){
 	logger = NSQLogger{}
-	level = ConvertLogLevel(lvl)
+	// hard coding this becuase nsq debug is so annoying
+	level = ConvertLogLevel(logrus.InfoLevel)
 	return
 }
 
