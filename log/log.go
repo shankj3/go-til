@@ -9,7 +9,7 @@ package log
 
 import (
 	"flag"
-	log "github.com/sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"
@@ -41,7 +41,6 @@ func GetDefaultFields() log.Fields {
 func GetLogLevel() log.Level {
 	return log.GetLevel()
 }
-
 
 // configure default Logger to log in JSON format.
 func InitializeLog(logLevel string) {
