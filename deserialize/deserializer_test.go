@@ -1,11 +1,11 @@
 package deserialize
 
 import (
-	"testing"
-	"io/ioutil"
 	"bytes"
-	"bitbucket.org/level11consulting/go-til/test"
-	dtest "bitbucket.org/level11consulting/go-til/deserialize/test-fixtures"
+	dtest "github.com/shankj3/go-til/deserialize/test-fixtures"
+	"github.com/shankj3/go-til/test"
+	"io/ioutil"
+	"testing"
 )
 
 const TestOcelot = "test-fixtures/ocelot.yml"
@@ -91,15 +91,15 @@ func TestDeserializer_JSONToProto(t *testing.T) {
 /// below are test structs for deserializer tests ///
 
 type BuildConfig struct {
-	Image string
-	BuildTool string	`yaml:"buildTool"`
-	Packages []string
-	Env map[string]string
-	Before BuildStage
-	After BuildStage
+	Image     string
+	BuildTool string `yaml:"buildTool"`
+	Packages  []string
+	Env       map[string]string
+	Before    BuildStage
+	After     BuildStage
 }
 
 type BuildStage struct {
-	Env map[string]string
+	Env    map[string]string
 	Script []string
 }

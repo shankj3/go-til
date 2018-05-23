@@ -9,7 +9,7 @@ package log
 
 import (
 	"flag"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"

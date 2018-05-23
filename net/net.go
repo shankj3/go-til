@@ -8,10 +8,10 @@ import (
 	"errors"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/shankj3/go-til/log"
+	"golang.org/x/oauth2/clientcredentials"
 	"io/ioutil"
 	"net/http"
-	"golang.org/x/oauth2/clientcredentials"
-	"bitbucket.org/level11consulting/go-til/log"
 )
 
 //TODO: what happens if I never create a instance of logger to hold on to?
@@ -33,7 +33,6 @@ type HttpClient interface {
 	PostUrl(url string, body string, unmarshalObj proto.Message) error
 }
 
-
 //OAuthClient is a client containing a pre-authenticated http client as returned by
 //golang's oauth2 clientcredentials package as well as a protobuf json unmarshaler
 type OAuthClient struct {
@@ -48,8 +47,8 @@ type OAuthClientCreds interface {
 }
 
 //Setup takes in OAuth2 credentials and returns a temporary token along with an error
-func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error){
-	var conf = clientcredentials.Config {
+func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error) {
+	var conf = clientcredentials.Config{
 		ClientID:     config.GetClientId(),
 		ClientSecret: config.GetClientSecret(),
 		TokenURL:     config.GetTokenURL(),
@@ -70,7 +69,6 @@ func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error){
 	return token.AccessToken, err
 }
 
-
 func (oc *OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	resp, err := oc.AuthClient.Get(url)
 	defer resp.Body.Close()
@@ -88,7 +86,6 @@ func (oc *OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	return nil
 }
 
-
 func (oc *OAuthClient) GetUrlRawData(url string) ([]byte, error) {
 	resp, err := oc.AuthClient.Get(url)
 	defer resp.Body.Close()
@@ -105,7 +102,6 @@ func (oc *OAuthClient) GetUrlRawData(url string) ([]byte, error) {
 	}
 	return bytez, nil
 }
-
 
 func (oc *OAuthClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
 	bodyBytes := []byte(body)

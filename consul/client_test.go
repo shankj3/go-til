@@ -2,10 +2,10 @@ package consul
 
 import (
 	"github.com/hashicorp/consul/testutil"
-	"testing"
-	"strings"
+	"github.com/shankj3/go-til/test"
 	"strconv"
-	"bitbucket.org/level11consulting/go-til/test"
+	"strings"
+	"testing"
 )
 
 func initServerAndConsulet(t *testing.T) (*Consulet, *testutil.TestServer) {
@@ -27,7 +27,7 @@ func TestConsulet_CreateNewSemaphore(t *testing.T) {
 		t.Errorf("couldnt create semaphore. error %s", err)
 	}
 	_, err = sema.Acquire(nil)
-	if err !=  nil {
+	if err != nil {
 		t.Fatalf("could not acquire lock on first try, err %s", err)
 	}
 	_, err = sema.Acquire(nil)

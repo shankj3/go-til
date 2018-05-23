@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+
+type Consuletty interface {
+	AddKeyValue(key string, value []byte) error
+	RemoveValue(key string) error
+	RemoveValues(prefix string) error
+	GetKeys(prefix string) (keys []string, err error)
+	GetKeyValues(prefix string) (api.KVPairs, error) 
+}
+
 //Consulet is a wrapper for interfacing with consul
 type Consulet struct {
 	Client *api.Client

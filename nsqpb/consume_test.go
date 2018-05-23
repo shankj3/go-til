@@ -1,8 +1,8 @@
 package nsqpb
 
 import (
+	"github.com/shankj3/go-til/test"
 	"testing"
-	"bitbucket.org/level11consulting/go-til/test"
 )
 
 func TestProtoConsume_Topics(t *testing.T) {

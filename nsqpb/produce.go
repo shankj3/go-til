@@ -1,29 +1,28 @@
 package nsqpb
 
 import (
-	"github.com/golang/protobuf/proto"
+    "github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
-	"bitbucket.org/level11consulting/go-til/log"
+    "github.com/shankj3/go-til/log"
 )
 
-
 type PbProduce struct {
-	config 	 	*nsq.Config
-	Producer 	*nsq.Producer
-	nsqpbConfig *NsqConfig
+    config      *nsq.Config
+    Producer    *nsq.Producer
+    nsqpbConfig *NsqConfig
 }
 
-func DefaultProducer() (producer *PbProduce, err error){
-	producer = &PbProduce{
-		config: 	 nsq.NewConfig(),
-		nsqpbConfig: DefaultNsqConf(),
-	}
-	producer.Producer, err = nsq.NewProducer(producer.nsqpbConfig.NsqDAddress(), producer.config)
-	if err != nil {
-		return
-	}
-	producer.Producer.SetLogger(NewNSQLoggerAtLevel(log.GetLogLevel()))
-	return
+func DefaultProducer() (producer *PbProduce, err error) {
+    producer = &PbProduce{
+        config:      nsq.NewConfig(),
+        nsqpbConfig: DefaultNsqConf(),
+    }
+    producer.Producer, err = nsq.NewProducer(producer.nsqpbConfig.NsqDAddress(), producer.config)
+    if err != nil {
+        return
+    }
+    producer.Producer.SetLogger(NewNSQLoggerAtLevel(log.GetLogLevel()))
+    return
 }
 
 // Write Protobuf Message to an NSQ topic with name topicName
@@ -40,19 +39,18 @@ func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
     log.Log().Debug("publishing data to ", topicName)
     err = p.Producer.Publish(topicName, data)
     if err != nil {
-    	log.IncludeErrField(err).Error("could not publish to nsq!")
-	}
+        log.IncludeErrField(err).Error("could not publish to nsq!")
+    }
     return err
 }
-
 
 // use this to get a producer instance in your code, it will call only once. need to have global variable
 // once and cachedProducer set in your service, then pass those to this.
 // look into sync.Once if confused
 func GetInitProducer() *PbProduce {
-	first, err := DefaultProducer()
-	if err != nil {
-		log.IncludeErrField(err).Fatal("Producer must be initialized.")
-	}
-	return first
+    first, err := DefaultProducer()
+    if err != nil {
+        log.IncludeErrField(err).Fatal("Producer must be initialized.")
+    }
+    return first
 }
