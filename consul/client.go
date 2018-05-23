@@ -13,7 +13,8 @@ type Consuletty interface {
 	RemoveValue(key string) error
 	RemoveValues(prefix string) error
 	GetKeys(prefix string) (keys []string, err error)
-	GetKeyValues(prefix string) (api.KVPairs, error) 
+	GetKeyValue(key string) (*api.KVPair, error) 
+	GetKeyValues(prefix string) (api.KVPairs, error)
 }
 
 //Consulet is a wrapper for interfacing with consul
