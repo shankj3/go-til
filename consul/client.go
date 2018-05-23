@@ -13,8 +13,9 @@ type Consuletty interface {
 	RemoveValue(key string) error
 	RemoveValues(prefix string) error
 	GetKeys(prefix string) (keys []string, err error)
-	GetKeyValue(key string) (*api.KVPair, error) 
+	GetKeyValue(key string) (*api.KVPair, error)
 	GetKeyValues(prefix string) (api.KVPairs, error)
+	IsConnected() bool
 }
 
 //Consulet is a wrapper for interfacing with consul
@@ -54,6 +55,10 @@ func New(consulHost string, consulPort int) (*Consulet, error) {
 	consulet.Client = c
 	consulet.checkIfConnected()
 	return consulet, nil
+}
+
+func (consul *Consulet) IsConnected() bool {
+	return consul.Connected
 }
 
 //RegisterService registers a service at specified host, port, with name
