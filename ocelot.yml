@@ -5,6 +5,9 @@ env:
 branches:
   - ALL
 stages:
+  - name: configure git
+    script:
+      - git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
   - name: make stoopid dep thing
     script:
       - mkdir -p $BUILD_DIR
