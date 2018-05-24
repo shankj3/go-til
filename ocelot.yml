@@ -8,12 +8,11 @@ stages:
   - name: install consul for testing
     script: 
       - apk update 
-      - apk add unzip 
+      - apk add unzip
+      - cd /go/bin 
       - wget https://releases.hashicorp.com/consul/1.1.0/consul_1.1.0_linux_amd64.zip
       - echo "unzipping"
       - unzip consul_1.1.0_linux_amd64.zip
-      - echo "moving"
-      - mv /go/consul /go/bin/consul
       - echo "done"
   - name: configure git
     script:
