@@ -11,7 +11,7 @@ stages:
   - name: make stoopid dep thing
     script:
       - mkdir -p $BUILD_DIR
-      - cp -r /$GIT_HASH $BUILD_DIR/go-til
+      - cp -r $WORKSPACE $BUILD_DIR/go-til
   - name: install dep & ensure dependencies
     script:
       - cd $BUILD_DIR/go-til
