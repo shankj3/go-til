@@ -26,7 +26,7 @@ stages:
       - cd $BUILD_DIR/go-til
       - go get -u github.com/golang/dep/...
       - dep ensure -v
-  - name: tag & push
+  - name: test
     script:
       - cd $BUILD_DIR
       - go test ./...
