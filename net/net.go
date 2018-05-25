@@ -28,6 +28,9 @@ type HttpClient interface {
 	//GetUrlRawData will return raw data at specified URL in a byte array
 	GetUrlRawData(url string) ([]byte, error)
 
+	//GetUrlResponse uses the OAuth Client to make an HTTP get call, and returns a normal response object. Caller is expected to close response body as per usual
+	GetUrlResponse(url string) (*http.Response, error)
+
 	//PostUrl will perform a post on the specified URL. It takes in a json formatted body
 	//and returns an (optional) protobuf response
 	PostUrl(url string, body string, unmarshalObj proto.Message) error
@@ -69,7 +72,14 @@ func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error) {
 	return token.AccessToken, err
 }
 
+//GetUrlResponse just uses the OAuth client to get the url.
+func (oc *OAuthClient) GetUrlResponse(url string) (*http.Response, error) {
+	return oc.AuthClient.Get(url)
+}
+
+
 func (oc *OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
+	// todo: this doesn't handle http response codes or anything... idk how much we need it in this case but seems weird
 	resp, err := oc.AuthClient.Get(url)
 	defer resp.Body.Close()
 	if err != nil {
