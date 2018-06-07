@@ -6,6 +6,12 @@ import (
     "github.com/shankj3/go-til/log"
 )
 
+
+type Producer interface {
+	WriteProto(message proto.Message, topicName string) error
+}
+
+
 type PbProduce struct {
     config      *nsq.Config
     Producer    *nsq.Producer
