@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 )
 
 //TODO: what happens if I never create a instance of logger to hold on to?
@@ -34,6 +35,9 @@ type HttpClient interface {
 	//PostUrl will perform a post on the specified URL. It takes in a json formatted body
 	//and returns an (optional) protobuf response
 	PostUrl(url string, body string, unmarshalObj proto.Message) error
+
+	// PostURLForm will post form data and return an http response 
+	PostUrlForm(url string, form url.Values) (*http.Response, error)
 }
 
 //OAuthClient is a client containing a pre-authenticated http client as returned by
@@ -111,6 +115,10 @@ func (oc *OAuthClient) GetUrlRawData(url string) ([]byte, error) {
 		return nil, err
 	}
 	return bytez, nil
+}
+
+func (oc *OAuthClient) PostUrlForm(url string, form url.Values) (*http.Response, error) {
+	return oc.AuthClient.PostForm(url, form)
 }
 
 func (oc *OAuthClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
