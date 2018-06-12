@@ -85,11 +85,11 @@ func (oc *OAuthClient) GetUrlResponse(url string) (*http.Response, error) {
 func (oc *OAuthClient) GetUrl(url string, unmarshalObj proto.Message) error {
 	// todo: this doesn't handle http response codes or anything... idk how much we need it in this case but seems weird
 	resp, err := oc.AuthClient.Get(url)
-	defer resp.Body.Close()
 	if err != nil {
 		log.IncludeErrField(err).Error("can't get url ", url)
 		return err
 	}
+	defer resp.Body.Close()
 	reader := bufio.NewReader(resp.Body)
 
 	if err := oc.Unmarshaler.Unmarshal(reader, unmarshalObj); err != nil {
