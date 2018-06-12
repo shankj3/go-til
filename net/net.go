@@ -36,7 +36,7 @@ type HttpClient interface {
 	//and returns an (optional) protobuf response
 	PostUrl(url string, body string, unmarshalObj proto.Message) error
 
-	// PostURLForm will post form data and return an http response 
+	// PostURLForm will post form data and return an http response
 	PostUrlForm(url string, form url.Values) (*http.Response, error)
 }
 
@@ -124,7 +124,9 @@ func (oc *OAuthClient) PostUrlForm(url string, form url.Values) (*http.Response,
 func (oc *OAuthClient) PostUrl(url string, body string, unmarshalObj proto.Message) error {
 	bodyBytes := []byte(body)
 	resp, err := oc.AuthClient.Post(url, "application/json", bytes.NewBuffer(bodyBytes))
-	defer resp.Body.Close()
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
 
 	if err != nil {
 		log.IncludeErrField(err).Error("can't post to url ", url)
