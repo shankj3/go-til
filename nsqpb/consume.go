@@ -7,7 +7,32 @@ import (
     "os"
     "runtime/debug"
     "time"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	consumedMsgs = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "nsqpb_consumed_messages",
+			Help: "total number of messages processed by nsqpb consumer",
+		},
+	)
+	finishReceived = prometheus.NewCounter(prometheus.CounterOpts{Name: "nsqpb_finish_received", Help: "number of messages that were called from sending data on finish channel"})
+	doneReceived = prometheus.NewCounter(prometheus.CounterOpts{Name:"nsqpb_done_received", Help: "number of messages that were finished from sending data on done channel"})
+	nsqMsgsFinished = prometheus.NewGauge(prometheus.GaugeOpts{Name: "go_nsq_messages_finished", Help: "from nsq library stats on consumer"})
+	nsqMsgsReceived = prometheus.NewGauge(prometheus.GaugeOpts{Name: "go_nsq_messages_received", Help: "from nsq library stats on consumer"})
+	nsqMsgsRequeued = prometheus.NewGauge(prometheus.GaugeOpts{Name: "go_nsq_messages_requeued", Help: "from nsq library stats on consumer"})
+	nsqMsgsActiveConnections = prometheus.NewGauge(prometheus.GaugeOpts{Name: "go_nsq_messages_connections", Help: "from nsq library stats on consumer"})
+)
+
+//log.Log().WithField("connections", fmt.Sprintf("%d", stats.Connections)).
+//WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
+//WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).
+//WithField("messagesRequeued", fmt.Sprintf("%d", stats.MessagesRequeued)).Debug("consumer stats")
+
+func init() {
+	prometheus.MustRegister(consumedMsgs, nsqMsgsRequeued, nsqMsgsReceived, nsqMsgsFinished, nsqMsgsActiveConnections, finishReceived, doneReceived)
+}
 
 // ProtoConsume wraps nsq.Message so that code outside the package can just add a UnmarshalProtoFunc
 // that doesn't require messing with nsq fields. just write a function that unmarshals to your proto object
@@ -65,6 +90,7 @@ func NewDefaultProtoConsume() *ProtoConsume {
 
 // NSQProtoConsume is a wrapper for `p.Handler.UnmarshalAndProcess` --> `nsq.HandlerFunc`
 func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
+	consumedMsgs.Inc()
     log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("receiving nsq proto msg")
     defer p.MessageRecovery(msg)
     done := make(chan int)
@@ -75,10 +101,12 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
     for {
         select {
         case <-done:
+        	doneReceived.Inc()
             log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("received on done channel, will stop sending TOUCH commands to nsq")
             msg.Finish()
             return nil
         case <-finish:
+        	finishReceived.Inc()
             log.Log().WithField("nsqMsgId", string(msg.ID[:])).Info("recieved on finish channel, calling msg.Finish()")
             msg.Finish()
             return nil
@@ -91,6 +119,10 @@ func (p *ProtoConsume) NSQProtoConsume(msg *nsq.Message) error {
             //  log.Log().Error("the consumer is starved!!")
             //}
             stats := consumer.Stats()
+			nsqMsgsActiveConnections.Set(float64(stats.Connections))
+            nsqMsgsFinished.Set(float64(stats.MessagesFinished))
+            nsqMsgsReceived.Set(float64(stats.MessagesReceived))
+            nsqMsgsRequeued.Set(float64(stats.MessagesRequeued))
             log.Log().WithField("connections", fmt.Sprintf("%d", stats.Connections)).
                 WithField("messagesReceived", fmt.Sprintf("%d", stats.MessagesReceived)).
                 WithField("messagesFinished", fmt.Sprintf("%d", stats.MessagesFinished)).

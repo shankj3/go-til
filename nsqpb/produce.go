@@ -4,8 +4,23 @@ import (
     "github.com/golang/protobuf/proto"
     "github.com/nsqio/go-nsq"
     "github.com/shankj3/go-til/log"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
+var (
+	producedMsgs = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "nsqpb_produced_messages_total",
+		Help: "all messages that nsqpb has produced",
+	})
+	failedPublish = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "nsqpb_failed_produced_messages",
+		Help: "all messages that nsqpb has attempted to publish and failed",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(producedMsgs, failedPublish)
+}
 
 type Producer interface {
 	WriteProto(message proto.Message, topicName string) error
@@ -36,6 +51,7 @@ func DefaultProducer() (producer *PbProduce, err error) {
 //  `NSQD_IP` or sets it to 127.0.0.1. the NSQ daemon should run alongside
 // any service that produces messages, so this will work usually.
 func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
+	producedMsgs.Inc()
     var data []byte
     data, err := proto.Marshal(message)
     if err != nil {
@@ -45,6 +61,7 @@ func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
     log.Log().Debug("publishing data to ", topicName)
     err = p.Producer.Publish(topicName, data)
     if err != nil {
+    	failedPublish.Inc()
         log.IncludeErrField(err).Error("could not publish to nsq!")
     }
     return err
