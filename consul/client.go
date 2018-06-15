@@ -2,11 +2,33 @@ package consul
 
 import (
 	"fmt"
-	"github.com/hashicorp/consul/api"
 	"strconv"
 	"strings"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/hashicorp/consul/api"
 )
 
+var (
+	consulCalls = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "consul_requests_total",
+		Help: "all consul requests made",
+		// status: fail | success
+	}, []string{"status"})
+)
+
+func record(err error) {
+	var status string
+	if err == nil {
+		status = "success"
+	} else {
+		status = "fail"
+	}
+	consulCalls.WithLabelValues(status).Inc()
+}
+
+func init() {
+	prometheus.MustRegister(consulCalls)
+}
 
 type Consuletty interface {
 	AddKeyValue(key string, value []byte) error
@@ -81,35 +103,39 @@ func (consul *Consulet) RemoveService(name string) error {
 }
 
 //TODO: should key value operations be atomic??? Can switch to use CAS
-func (consul *Consulet) AddKeyValue(key string, value []byte) error {
+func (consul *Consulet) AddKeyValue(key string, value []byte) (err error) {
+	defer record(err)
 	kv := consul.Client.KV()
 	kvPair := &api.KVPair{
 		Key:   key,
 		Value: value,
 	}
-	_, err := kv.Put(kvPair, nil)
+	_, err = kv.Put(kvPair, nil)
 	consul.updateConnection(err)
 	return err
 }
 
 //RemoveValue removes value at specified key
-func (consul *Consulet) RemoveValue(key string) error {
+func (consul *Consulet) RemoveValue(key string) (err error) {
+	defer record(err)
 	kv := consul.Client.KV()
-	_, err := kv.Delete(key, nil)
+	_, err = kv.Delete(key, nil)
 	consul.updateConnection(err)
 	return err
 }
 
 // Remove values at specified prefix (like `consul kv delete -recurse /prefix`)
-func (consul *Consulet) RemoveValues(prefix string) error {
+func (consul *Consulet) RemoveValues(prefix string) (err error) {
+	defer record(err)
 	kv := consul.Client.KV()
-	_, err := kv.DeleteTree(prefix, nil)
+	_, err = kv.DeleteTree(prefix, nil)
 	consul.updateConnection(err)
 	return err
 }
 
 // GetKeys uses consul default of separator ("/")
 func (consul *Consulet) GetKeys(prefix string) (keys []string, err error) {
+	defer record(err)
 	kv := consul.Client.KV()
 	keys, _, err = kv.Keys(prefix, "", nil)
 	if err != nil {
@@ -119,22 +145,24 @@ func (consul *Consulet) GetKeys(prefix string) (keys []string, err error) {
 }
 
 //GetKeyValue gets key/value at specified key
-func (consul *Consulet) GetKeyValue(key string) (*api.KVPair, error) {
+func (consul *Consulet) GetKeyValue(key string) (pair *api.KVPair, err error) {
+	defer record(err)
 	kv := consul.Client.KV()
-	val, _, err := kv.Get(key, nil)
+	pair, _, err = kv.Get(key, nil)
 	consul.updateConnection(err)
-	return val, err
+	return pair, err
 }
 
 //GetKeyValue gets key/value list at specified prefix
-func (consul *Consulet) GetKeyValues(prefix string) (api.KVPairs, error) {
+func (consul *Consulet) GetKeyValues(prefix string) (pairs api.KVPairs, err error) {
 	kv := consul.Client.KV()
-	val, _, err := kv.List(prefix, nil)
+	pairs, _, err = kv.List(prefix, nil)
 	consul.updateConnection(err)
-	return val, err
+	return pairs, err
 }
 
-func (consul *Consulet) CreateNewSemaphore(path string, limit int) (*api.Semaphore, error) {
+func (consul *Consulet) CreateNewSemaphore(path string, limit int) (sema *api.Semaphore, err error) {
+	defer record(err)
 	sessionName := fmt.Sprintf("semaphore_%s", path)
 	// create new session. the health check is just gossip failure detector, session will
 	// be held as long as the default serf health check hasn't declared node unhealthy.
@@ -153,7 +181,7 @@ func (consul *Consulet) CreateNewSemaphore(path string, limit int) (*api.Semapho
 		Session:     sessionId,
 		SessionName: sessionName,
 	}
-	sema, err := consul.Client.SemaphoreOpts(semaphoreOpts)
+	sema, err = consul.Client.SemaphoreOpts(semaphoreOpts)
 	if err != nil {
 		consul.updateConnection(err)
 		return nil, err
