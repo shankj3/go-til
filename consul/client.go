@@ -37,6 +37,8 @@ type Consuletty interface {
 	GetKeys(prefix string) (keys []string, err error)
 	GetKeyValue(key string) (*api.KVPair, error)
 	GetKeyValues(prefix string) (api.KVPairs, error)
+	RegisterService(addr string, port int, name string) error
+	RemoveService(name string) error
 	IsConnected() bool
 }
 
