@@ -2,7 +2,7 @@
 // Source: client.go
 
 // Package mock_consul is a generated GoMock package.
-package mock_consul
+package consul
 
 import (
 	gomock "github.com/golang/mock/gomock"
