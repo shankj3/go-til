@@ -40,6 +40,7 @@ type Consuletty interface {
 	RegisterService(addr string, port int, name string) error
 	RemoveService(name string) error
 	IsConnected() bool
+	Detail() string
 }
 
 //Consulet is a wrapper for interfacing with consul
@@ -79,6 +80,10 @@ func New(consulHost string, consulPort int) (*Consulet, error) {
 	consulet.Client = c
 	consulet.checkIfConnected()
 	return consulet, nil
+}
+
+func (consul *Consulet) Detail() string {
+	return consul.Config.Address
 }
 
 func (consul *Consulet) IsConnected() bool {

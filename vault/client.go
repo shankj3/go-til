@@ -37,6 +37,7 @@ type Vaulty interface {
 	CreateThrowawayToken() (token string, err error)
 	CreateVaultPolicy() error
 	GetAddress() string
+	Healthy() bool 
 }
 
 type VaultyImpl struct {
@@ -83,6 +84,14 @@ func NewAuthedClient(token string) (val Vaulty, err error) {
 	// i guess?
 	valImpl.CreateVaultPolicy()
 	return valImpl, nil
+}
+
+func (val *VaultyImpl) Healthy() bool {
+	_, err := val.Client.Sys().Health()
+	if err == nil {
+		return true
+	}
+	return false
 }
 
 // AddUserAuthData will add the values of the data map to the path of the CI user creds
@@ -153,17 +162,6 @@ func (val *VaultyImpl) CreateVaultPolicy() error {
 	}
 	return nil
 }
-
-//
-//// Test function
-//func Do() {
-//	cli, err := NewAuthedClient(Token)
-//	if err != nil {
-//		panic("boooOOoooooOOoooOOOoo")
-//	}
-//	v, _ := cli.Logical().Read("secret/booboo")
-//	spew.Dump(v.Data)
-//}
 
 func NotFound(msg string) *ErrNotFound {
 	return &ErrNotFound{msg:msg}
