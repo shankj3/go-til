@@ -3,13 +3,13 @@ package vault
 import (
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/vault"
+	"github.com/shankj3/go-til/test"
 	"net"
 	"os"
 	"testing"
-	"bitbucket.org/level11consulting/go-til/test"
 )
 
-var userdata = []struct{
+var userdata = []struct {
 	username string
 	testdata string
 }{
@@ -57,13 +57,14 @@ func TestOcevault_CreateThrowawayToken(t *testing.T) {
 	}
 	_, err = newCli.GetUserAuthData("marianne")
 	if err != nil {
-		t.Fatalf("Couldn't retrieve any data on first use. Error: %s",  err)
+		t.Fatalf("Couldn't retrieve any data on first use. Error: %s", err)
 	}
 	_, err = newCli.GetUserAuthData("jessi")
 	if err == nil {
 		t.Fatalf("Supposed to be single use token!")
 	}
 }
+
 //
 func TestOcevault_GetUserAuthData(t *testing.T) {
 	oce, ln := testSetupVaultAndAuthClient(t)

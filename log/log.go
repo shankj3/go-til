@@ -42,7 +42,6 @@ func GetLogLevel() log.Level {
 	return log.GetLevel()
 }
 
-
 // configure default Logger to log in JSON format.
 func InitializeLog(logLevel string) {
 	if loglevel, err := log.ParseLevel(logLevel); err != nil {

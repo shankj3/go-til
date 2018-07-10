@@ -3,17 +3,18 @@ package net
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
+	"github.com/shankj3/go-til/test"
 	"net/http/httptest"
 	"testing"
-	"bitbucket.org/level11consulting/go-til/test"
 )
-func TestJSONApiError(t *testing.T){
+
+func TestJSONApiError(t *testing.T) {
 	w := httptest.NewRecorder()
 	JSONApiError(w, 400, "missing!", errors.New("test error"))
 	expectedRestErr := ApiHttpError{
-		Error: "test error",
+		Error:            "test error",
 		ErrorDescription: "missing!",
-		Status: 400,
+		Status:           400,
 	}
 	res := w.Result()
 	if res.StatusCode != 400 {

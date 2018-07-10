@@ -2,9 +2,9 @@ package nsqpb
 
 import (
 	"github.com/nsqio/go-nsq"
+	"github.com/shankj3/go-til/log"
 	"github.com/sirupsen/logrus"
 	"strings"
-	"bitbucket.org/level11consulting/go-til/log"
 )
 
 func ConvertLogLevel(level logrus.Level) nsq.LogLevel {
@@ -34,9 +34,10 @@ func NewNSQLogger() (logger NSQLogger, level nsq.LogLevel) {
 	return NewNSQLoggerAtLevel(log.GetLogLevel())
 }
 
-func NewNSQLoggerAtLevel(lvl logrus.Level) (logger NSQLogger, level nsq.LogLevel){
+func NewNSQLoggerAtLevel(lvl logrus.Level) (logger NSQLogger, level nsq.LogLevel) {
 	logger = NSQLogger{}
-	level = ConvertLogLevel(lvl)
+	// hard coding this becuase nsq debug is so annoying
+	level = ConvertLogLevel(logrus.InfoLevel)
 	return
 }
 

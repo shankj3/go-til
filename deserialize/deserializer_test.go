@@ -1,11 +1,11 @@
 package deserialize
 
 import (
-	"testing"
-	"io/ioutil"
 	"bytes"
-	"bitbucket.org/level11consulting/go-til/test"
-	dtest "bitbucket.org/level11consulting/go-til/deserialize/test-fixtures"
+	dtest "github.com/shankj3/go-til/deserialize/test-fixtures"
+	"github.com/shankj3/go-til/test"
+	"io/ioutil"
+	"testing"
 )
 
 const TestOcelot = "test-fixtures/ocelot.yml"
@@ -44,6 +44,18 @@ func TestDeserializer_YAMLToStruct(t *testing.T) {
 	//can we assume parsing looks good if the above values have been set or do I have to write it for all the fields
 }
 
+func TestDeserializer_YamlToProto(t *testing.T) {
+	teste, err := ioutil.ReadFile("./test-fixtures/vcs.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := New()
+	vcs := &dtest.CredWrapper{}
+	err = d.YAMLToProto(teste, vcs)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 func TestDeserializer_JSONToProto(t *testing.T) {
 	repositories := &dtest.PaginatedRepository{}
 	testRepo, _ := ioutil.ReadFile(TestRepos)
@@ -79,15 +91,15 @@ func TestDeserializer_JSONToProto(t *testing.T) {
 /// below are test structs for deserializer tests ///
 
 type BuildConfig struct {
-	Image string
-	BuildTool string	`yaml:"buildTool"`
-	Packages []string
-	Env map[string]string
-	Before BuildStage
-	After BuildStage
+	Image     string
+	BuildTool string `yaml:"buildTool"`
+	Packages  []string
+	Env       map[string]string
+	Before    BuildStage
+	After     BuildStage
 }
 
 type BuildStage struct {
-	Env map[string]string
+	Env    map[string]string
 	Script []string
 }

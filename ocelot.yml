@@ -1,0 +1,33 @@
+image: golang:1.10.2-alpine3.7
+buildTool: go
+env: 
+  - "BUILD_DIR=/go/src/bitbucket.org/level11consulting/"
+branches:
+  - ALL
+stages:
+  - name: install consul for testing
+    script: 
+      - apk update 
+      - apk add unzip
+      - cd /go/bin 
+      - wget https://releases.hashicorp.com/consul/1.1.0/consul_1.1.0_linux_amd64.zip
+      - echo "unzipping"
+      - unzip consul_1.1.0_linux_amd64.zip
+      - echo "done"
+  - name: configure git
+    script:
+      - git config --global url."git@bitbucket.org:".insteadOf "https://bitbucket.org/"
+  - name: make stoopid dep thing
+    script:
+      - mkdir -p $BUILD_DIR
+      - cp -r $WORKSPACE $BUILD_DIR/go-til
+  - name: install dep & ensure dependencies
+    script:
+      - cd $BUILD_DIR/go-til
+      - go get -u github.com/golang/dep/...
+      - dep ensure -v
+  - name: test
+    script:
+      - cd $BUILD_DIR
+      - go test ./...
+
