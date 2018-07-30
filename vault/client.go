@@ -86,6 +86,11 @@ func NewAuthedClient(token string) (val Vaulty, err error) {
 	return valImpl, nil
 }
 
+func (val *VaultyImpl) Renew() error {
+	_, err := val.Client.Auth().Token().RenewSelf(86400)
+	return err
+}
+
 func (val *VaultyImpl) Healthy() bool {
 	_, err := val.Client.Sys().Health()
 	if err == nil {
