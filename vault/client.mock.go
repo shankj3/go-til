@@ -146,6 +146,7 @@ func (m *MockVaulty) Healthy() bool {
 func (mr *MockVaultyMockRecorder) Healthy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Healthy", reflect.TypeOf((*MockVaulty)(nil).Healthy))
 }
+<<<<<<< HEAD
 
 // DeletePath mocks base method
 func (m *MockVaulty) DeletePath(path string) error {
@@ -158,3 +159,5 @@ func (m *MockVaulty) DeletePath(path string) error {
 func (mr *MockVaultyMockRecorder) DeletePath(path interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePath", reflect.TypeOf((*MockVaulty)(nil).DeletePath), path)
 }
+=======
+>>>>>>> 131427741f533b9384fecf8eff4d4b258a2be69c

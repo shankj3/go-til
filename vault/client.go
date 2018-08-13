@@ -10,7 +10,7 @@ import (
 
 // VaultCIPath is the base path for vault. Will be formatted to include the user or group when
 // setting or retrieving credentials.
-var VaultCIPath = "secret/%s"
+var VaultCIPath = "secret/data/%s"
 var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 
 // Some blog said that changing any *api.Client functions to take in a n interface instead
@@ -85,6 +85,11 @@ func NewAuthedClient(token string) (val Vaulty, err error) {
 	// i guess?
 	valImpl.CreateVaultPolicy()
 	return valImpl, nil
+}
+
+func (val *VaultyImpl) Renew() error {
+	_, err := val.Client.Auth().Token().RenewSelf(86400)
+	return err
 }
 
 func (val *VaultyImpl) Healthy() bool {
