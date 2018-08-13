@@ -134,3 +134,27 @@ func (m *MockVaulty) GetAddress() string {
 func (mr *MockVaultyMockRecorder) GetAddress() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddress", reflect.TypeOf((*MockVaulty)(nil).GetAddress))
 }
+
+// Healthy mocks base method
+func (m *MockVaulty) Healthy() bool {
+	ret := m.ctrl.Call(m, "Healthy")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Healthy indicates an expected call of Healthy
+func (mr *MockVaultyMockRecorder) Healthy() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Healthy", reflect.TypeOf((*MockVaulty)(nil).Healthy))
+}
+
+// DeletePath mocks base method
+func (m *MockVaulty) DeletePath(path string) error {
+	ret := m.ctrl.Call(m, "DeletePath", path)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePath indicates an expected call of DeletePath
+func (mr *MockVaultyMockRecorder) DeletePath(path interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePath", reflect.TypeOf((*MockVaulty)(nil).DeletePath), path)
+}

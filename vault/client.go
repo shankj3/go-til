@@ -37,7 +37,8 @@ type Vaulty interface {
 	CreateThrowawayToken() (token string, err error)
 	CreateVaultPolicy() error
 	GetAddress() string
-	Healthy() bool 
+	Healthy() bool
+	DeletePath(path string) error
 }
 
 type VaultyImpl struct {
@@ -127,6 +128,15 @@ func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, err
 	path := fmt.Sprintf(VaultCIPath, user)
 	return val.GetVaultData(path)
 }
+
+// DeletePath will format the path with prepending our mount path (secret/data) and then deleting at the fully qualified path
+// will return any errors from the Vault API
+func (val *VaultyImpl) DeletePath(path string) error {
+	fullPath := fmt.Sprintf(VaultCIPath, path)
+	_, err := val.Client.Logical().Delete(fullPath)
+	return err
+}
+
 
 // CreateToken creates an Auth token using the val.Client's creds. Look at api.TokenCreateRequest docs
 // for how to configure the token. Will return any errors from the create request.

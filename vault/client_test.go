@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"strings"
 )
 
 var userdata = []struct {
@@ -112,6 +113,52 @@ func TestOcevault_AddUserAuthData(t *testing.T) {
 			t.Error(test.GenericStrFormatErrors("User Auth data Add", nd.data, sec["test"]))
 		}
 	}
+	// now make sure you can delete it!
+	user1 := newdata[0]
+	err := oce.DeletePath(user1.user)
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = oce.GetUserAuthData(user1.user)
+	if err == nil {
+		t.Error("should return a not found")
+	}
+	if !strings.Contains(err.Error(), "user data not found, path searched: ") {
+		t.Errorf("should return a user data not found, instead returned %s", err.Error())
+	}
+	// now make sure that it didn't delete _everything_ in the process
+	user2 := newdata[1]
+	sec, err := oce.GetUserAuthData(user2.user)
+	if err != nil {
+		t.Errorf("should not have errored, this shoudl still exist, %s", err.Error())
+	}
+	if sec["test"].(string) != "107" {
+		t.Error("wtf ids this", sec["test"])
+	}
+}
+
+
+func TestOcevault_DeletePath(t *testing.T) {
+	var newdata = []struct {
+		user string
+		data interface{}
+	}{
+		{"user1", "17"},
+		{"user7", "107"},
+		{"user10", "23"},
+		{"userweird", "weirdboy"},
+	}
+	oce, ln := testSetupVaultAndAuthClient(t)
+	defer ln.Close()
+	for _, nd := range newdata {
+		data := make(map[string]interface{})
+		data["test"] = nd.data
+		_, err := oce.AddUserAuthData(nd.user, data)
+		if err != nil {
+			t.Errorf("could not add user data for %s, test data value %s, \n Error: %s", nd.user, nd.data, err)
+		}
+	}
+
 }
 
 //
