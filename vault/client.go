@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+//go:generate mockgen -source client.go -destination client.mock.go -package vault
+
 // VaultCIPath is the base path for vault. Will be formatted to include the user or group when
 // setting or retrieving credentials.
 var VaultCIPath = "secret/data/%s"
