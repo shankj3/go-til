@@ -7,6 +7,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+//go:generate mockgen -source produce.go -destination produce.mock.go -package nsqpb
+
 var (
 	producedMsgs = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "nsqpb_produced_messages_total",

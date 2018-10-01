@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
+//go:generate mockgen -source client.go -destination client.mock.go -package consul
+
 var (
 	consulCalls = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "consul_requests_total",
