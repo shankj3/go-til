@@ -38,6 +38,9 @@ type HttpClient interface {
 
 	// PostURLForm will post form data and return an http response
 	PostUrlForm(url string, form url.Values) (*http.Response, error)
+
+	// GetAuthClient will return the oauth authenticated client for more flexibility
+	GetAuthClient() http.Client
 }
 
 //OAuthClient is a client containing a pre-authenticated http client as returned by
@@ -51,6 +54,11 @@ type OAuthClientCreds interface {
 	GetClientId() string
 	GetClientSecret() string
 	GetTokenURL() string
+}
+
+
+func (oc *OAuthClient) GetAuthClient() http.Client {
+	return oc.AuthClient
 }
 
 //Setup takes in OAuth2 credentials and returns a temporary token along with an error
