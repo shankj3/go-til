@@ -85,6 +85,19 @@ func (mr *MockVaultyMockRecorder) GetVaultData(path interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVaultData", reflect.TypeOf((*MockVaulty)(nil).GetVaultData), path)
 }
 
+// GetVaultSecret mocks base method
+func (m *MockVaulty) GetVaultSecret(path string) (*api.Secret, error) {
+	ret := m.ctrl.Call(m, "GetVaultSecret", path)
+	ret0, _ := ret[0].(*api.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVaultSecret indicates an expected call of GetVaultSecret
+func (mr *MockVaultyMockRecorder) GetVaultSecret(path interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVaultSecret", reflect.TypeOf((*MockVaulty)(nil).GetVaultSecret), path)
+}
+
 // CreateToken mocks base method
 func (m *MockVaulty) CreateToken(request *api.TokenCreateRequest) (string, error) {
 	ret := m.ctrl.Call(m, "CreateToken", request)
@@ -157,4 +170,29 @@ func (m *MockVaulty) DeletePath(path string) error {
 // DeletePath indicates an expected call of DeletePath
 func (mr *MockVaultyMockRecorder) DeletePath(path interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePath", reflect.TypeOf((*MockVaulty)(nil).DeletePath), path)
+}
+
+// RenewLeaseForever mocks base method
+func (m *MockVaulty) RenewLeaseForever(secret *api.Secret) error {
+	ret := m.ctrl.Call(m, "RenewLeaseForever", secret)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenewLeaseForever indicates an expected call of RenewLeaseForever
+func (mr *MockVaultyMockRecorder) RenewLeaseForever(secret interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewLeaseForever", reflect.TypeOf((*MockVaulty)(nil).RenewLeaseForever), secret)
+}
+
+// RenewLeaseOnce mocks base method
+func (m *MockVaulty) RenewLeaseOnce(leaseID string, increment int) (*api.Secret, error) {
+	ret := m.ctrl.Call(m, "RenewLeaseOnce", leaseID, increment)
+	ret0, _ := ret[0].(*api.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RenewLeaseOnce indicates an expected call of RenewLeaseOnce
+func (mr *MockVaultyMockRecorder) RenewLeaseOnce(leaseID, increment interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewLeaseOnce", reflect.TypeOf((*MockVaulty)(nil).RenewLeaseOnce), leaseID, increment)
 }

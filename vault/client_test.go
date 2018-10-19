@@ -1,13 +1,14 @@
 package vault
 
 import (
+	"net"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/hashicorp/vault/http"
 	"github.com/hashicorp/vault/vault"
 	"github.com/shankj3/go-til/test"
-	"net"
-	"os"
-	"testing"
-	"strings"
 )
 
 var userdata = []struct {
@@ -137,7 +138,6 @@ func TestOcevault_AddUserAuthData(t *testing.T) {
 	}
 }
 
-
 func TestOcevault_DeletePath(t *testing.T) {
 	var newdata = []struct {
 		user string
@@ -161,7 +161,6 @@ func TestOcevault_DeletePath(t *testing.T) {
 
 }
 
-//
 //func TestOcevault_CreateOcevaultPolicy(t *testing.T) {
 //	oce, err := NewEnvAuthClient()
 //	if err != nil {
@@ -170,4 +169,18 @@ func TestOcevault_DeletePath(t *testing.T) {
 //	if err = oce.CreateOcevaultPolicy(); err != nil {
 //		t.Fatal(err)
 //	}
+//}
+
+//func TestOcevault_GetVaultSecret(t *testing.T) {
+//
+//}
+
+//func TestOcevault_DatabaseSecretEngine(t *testing.T) {
+//
+//	// Set up a test vault instance
+//	// check that engine is disabled
+//	// Enable the db secret engine
+//	// check that it is enabled
+//	// Disable db secret engine
+//	// check that engine is disabled
 //}

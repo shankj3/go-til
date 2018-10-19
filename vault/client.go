@@ -48,6 +48,8 @@ type Vaulty interface {
 	DeletePath(path string) error
 	RenewLeaseForever(secret *api.Secret) error
 	RenewLeaseOnce(leaseID string, increment int) (*api.Secret, error)
+	//EnableDatabaseSecretEngine(config map[string]interface{}) error
+	//DisableDatabaseSecretEngine() error
 }
 
 // VaultyImpl is the go-til wrapper to the Vault client
@@ -241,3 +243,19 @@ type ErrNotFound struct {
 func (e *ErrNotFound) Error() string {
 	return e.msg
 }
+
+//// FIXME: We are not able to write tests that use Database Secret Engine until we can enable the backend in a test context.
+//// EnableDatabaseSecretEngine will enable the Database Secret Engine via the Vault api
+//func (val *VaultyImpl) EnableDatabaseSecretEngine(config map[string]interface{}) error {
+//
+//	mountInput := api.MountInput{}
+//
+//	//return secret, nil
+//	return val.Client.Sys().Mount("database/config/ocelot", &mountInput)
+//}
+//
+//// FIXME
+//// DisableDatabaseSecretEngine will disable the Database Secret Engine via the Vault api
+//func (val *VaultyImpl) DisableDatabaseSecretEngine() error {
+//	return nil
+//}
