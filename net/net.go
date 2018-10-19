@@ -15,6 +15,8 @@ import (
 	"net/url"
 )
 
+//go:generate mockgen -source net.go -destination net.mock.go -package net
+
 //TODO: what happens if I never create a instance of logger to hold on to?
 
 var (
@@ -40,13 +42,13 @@ type HttpClient interface {
 	PostUrlForm(url string, form url.Values) (*http.Response, error)
 
 	// GetAuthClient will return the oauth authenticated client for more flexibility
-	GetAuthClient() http.Client
+	GetAuthClient() *http.Client
 }
 
 //OAuthClient is a client containing a pre-authenticated http client as returned by
 //golang's oauth2 clientcredentials package as well as a protobuf json unmarshaler
 type OAuthClient struct {
-	AuthClient  http.Client
+	AuthClient  *http.Client
 	Unmarshaler jsonpb.Unmarshaler
 }
 
@@ -57,7 +59,7 @@ type OAuthClientCreds interface {
 }
 
 
-func (oc *OAuthClient) GetAuthClient() http.Client {
+func (oc *OAuthClient) GetAuthClient() *http.Client {
 	return oc.AuthClient
 }
 
@@ -80,7 +82,7 @@ func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error) {
 	oc.Unmarshaler = jsonpb.Unmarshaler{
 		AllowUnknownFields: true,
 	}
-	oc.AuthClient = *authClient
+	oc.AuthClient = authClient
 	return token.AccessToken, err
 }
 
