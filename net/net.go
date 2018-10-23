@@ -64,7 +64,7 @@ func (oc *OAuthClient) GetAuthClient() *http.Client {
 	return oc.AuthClient
 }
 
-//Setup takes in OAuth2 credentials and returns a temporary token along with an error
+//Setup takes in OAuth2 credentials and returns a temporary token along with an error. uses two-legged OAuth model.
 func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error) {
 	var conf = clientcredentials.Config{
 		ClientID:     config.GetClientId(),
@@ -87,13 +87,26 @@ func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error) {
 	return token.AccessToken, err
 }
 
+// SetupStaticToken will set up the OAuthClient to use a static token, will assume it will never expire.
+//   Used for github api authentication, or any service that does not support two-legged OAuth
 func (oc *OAuthClient) SetupStaticToken(config OAuthClientCreds) (string, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: config.GetClientSecret()},
 	)
 	oc.AuthClient = oauth2.NewClient(ctx, ts)
+	oc.Unmarshaler = jsonpb.Unmarshaler{
+		AllowUnknownFields: true,
+	}
 	return config.GetClientSecret(), nil
+}
+
+// SetupNoAuthentication will set up OAuthClient to make calls with a regular *http.Client, all calls will be unauthenticated
+func (oc *OAuthClient) SetupNoAuthentication() {
+	oc.AuthClient = &http.Client{}
+	oc.Unmarshaler = jsonpb.Unmarshaler{
+		AllowUnknownFields: true,
+	}
 }
 
 //GetUrlResponse just uses the OAuth client to get the url.
