@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"golang.org/x/oauth2"
 )
 
 //go:generate mockgen -source net.go -destination net.mock.go -package net
@@ -84,6 +85,15 @@ func (oc *OAuthClient) Setup(config OAuthClientCreds) (string, error) {
 	}
 	oc.AuthClient = authClient
 	return token.AccessToken, err
+}
+
+func (oc *OAuthClient) SetupStaticToken(config OAuthClientCreds) (string, error) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: config.GetClientSecret()},
+	)
+	oc.AuthClient = oauth2.NewClient(ctx, ts)
+	return config.GetClientSecret(), nil
 }
 
 //GetUrlResponse just uses the OAuth client to get the url.
