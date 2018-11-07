@@ -3,9 +3,12 @@ package vault
 import (
 	"errors"
 	"fmt"
-	"sync"
-	"github.com/hashicorp/vault/api"
 	"os"
+	"sync"
+	"time"
+
+	"github.com/hashicorp/vault/api"
+	ocelog "github.com/shankj3/go-til/log"
 )
 
 //go:generate mockgen -source client.go -destination client.mock.go -package vault
@@ -13,7 +16,8 @@ import (
 // VaultCIPath is the base path for vault. Will be formatted to include the user or group when
 // setting or retrieving credentials.
 var VaultCIPath = "secret/data/%s"
-var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
+
+//var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 
 // Some blog said that changing any *api.Client functions to take in a n interface instead
 // will make testing easier. I agree, just have to figure out how to do this properly without
@@ -29,26 +33,32 @@ var Token = "e57369ad-9419-cc03-9354-fc227b06f795"
 //	Write(path string, data map[string]interface{}) (*api.Secret, error)
 //}
 
-
+// Vaulty is the go-til wrapper interface to the Vault API
 type Vaulty interface {
 	AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error)
 	GetUserAuthData(user string) (map[string]interface{}, error)
 	AddVaultData(path string, data map[string]interface{}) (*api.Secret, error)
 	GetVaultData(path string) (map[string]interface{}, error)
+	GetVaultSecret(path string) (*api.Secret, error)
 	CreateToken(request *api.TokenCreateRequest) (token string, err error)
 	CreateThrowawayToken() (token string, err error)
 	CreateVaultPolicy() error
 	GetAddress() string
 	Healthy() bool
 	DeletePath(path string) error
+	RenewLeaseForever(secret *api.Secret) error
+	RenewLeaseOnce(leaseID string, increment int) (*api.Secret, error)
+	//EnableDatabaseSecretEngine(config map[string]interface{}) error
+	//DisableDatabaseSecretEngine() error
 }
 
+// VaultyImpl is the go-til wrapper to the Vault client
 type VaultyImpl struct {
-	Client	*api.Client
-	Config	*api.Config
+	Client *api.Client
+	Config *api.Config
 }
 
-
+// GetInitVault will return an authenticated Vault client
 // Use this function as a singleton essentially.
 // todo,  flesh out docs, for now look at hookhandler for use.
 func GetInitVault(once sync.Once, vaultCached Vaulty) (Vaulty, error) {
@@ -62,8 +72,7 @@ func GetInitVault(once sync.Once, vaultCached Vaulty) (Vaulty, error) {
 	return vaultCached, nil
 }
 
-
-// NewEnvAuthedClient will set the Client token based on the environment variable `$VAULT_TOKEN`.
+// NewEnvAuthClient will set the Client token based on the environment variable `$VAULT_TOKEN`.
 // Will return error if it is not set. Returns configured ocevault struct
 func NewEnvAuthClient() (Vaulty, error) {
 	var token string
@@ -89,11 +98,36 @@ func NewAuthedClient(token string) (val Vaulty, err error) {
 	return valImpl, nil
 }
 
-func (val *VaultyImpl) Renew() error {
+// RenewToken is a wrapper to the Vault api. Renews the token for 24 hours.
+func (val *VaultyImpl) RenewToken() error {
 	_, err := val.Client.Auth().Token().RenewSelf(86400)
 	return err
 }
 
+// RenewLeaseForever is intended to be run as a goroutine. Will wait for 75% of ttl (secret.LeaseDuration), then try to renew the secret with same ttl
+func (val *VaultyImpl) RenewLeaseForever(secret *api.Secret) error {
+	currentSecret := secret
+	err := errors.New("The RenewLeaseForever loop failed before setting an error. This shouldn't ever happen")
+	for {
+		time.Sleep(time.Duration((currentSecret.LeaseDuration/4)*3) * time.Second)
+		//time.Sleep(time.Duration(60) * time.Second)
+		ocelog.Log().Debugf("About to renew the lease for %s", secret.LeaseID)
+		currentSecret, err = val.RenewLeaseOnce(currentSecret.LeaseID, currentSecret.LeaseDuration)
+		if err != nil {
+			return err
+		}
+		//ocelog.Log().Debugf("Current secret: %v", currentSecret)
+	}
+	// This should be unreachable
+	//return err
+}
+
+// RenewLeaseOnce is a wrapper to the Vault API secret renew
+func (val *VaultyImpl) RenewLeaseOnce(leaseID string, increment int) (*api.Secret, error) {
+	return val.Client.Sys().Renew(leaseID, increment)
+}
+
+// Healthy returns true if the Vault server returns a HealthResponse. Otherwise returns false.
 func (val *VaultyImpl) Healthy() bool {
 	_, err := val.Client.Sys().Health()
 	if err == nil {
@@ -104,22 +138,25 @@ func (val *VaultyImpl) Healthy() bool {
 
 // AddUserAuthData will add the values of the data map to the path of the CI user creds
 // CI vault path set off of base path VaultCIPath
-func (val *VaultyImpl) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error){
+func (val *VaultyImpl) AddUserAuthData(user string, data map[string]interface{}) (*api.Secret, error) {
 	return val.Client.Logical().Write(fmt.Sprintf(VaultCIPath, user), data)
 }
 
+// GetAddress returns the Vault client address
 func (val *VaultyImpl) GetAddress() string {
 	return val.Client.Address()
 }
 
-// AddUserAuthData will add the values of the data map to the path of the CI user creds
+// AddVaultData will add the values of the data map to the path of the CI user creds
 // CI vault path set off of base path VaultCIPath
-func (val *VaultyImpl) AddVaultData(path string, data map[string]interface{}) (*api.Secret, error){
+func (val *VaultyImpl) AddVaultData(path string, data map[string]interface{}) (*api.Secret, error) {
 	return val.Client.Logical().Write(path, data)
 }
 
-func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error){
+// GetVaultData Reads from a given Vault path, but only returns the Data element
+func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error) {
 	secret, err := val.Client.Logical().Read(path)
+	ocelog.Log().Debugf("Secret from Vault %v", secret)
 	if err != nil {
 		return nil, err
 	}
@@ -129,9 +166,22 @@ func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error)
 	return secret.Data, nil
 }
 
-// GetSecretData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
+// GetVaultSecret Reads from a given Vault path. It is a lazy copy/paste of GetVaultData, but instead returns the full secret
+func (val *VaultyImpl) GetVaultSecret(path string) (*api.Secret, error) {
+	secret, err := val.Client.Logical().Read(path)
+	ocelog.Log().Debugf("Secret from Vault %v", secret)
+	if err != nil {
+		return nil, err
+	}
+	if secret == nil {
+		return nil, NotFound(fmt.Sprintf("user data not found, path searched: %s", path))
+	}
+	return secret, nil
+}
+
+// GetUserAuthData will return the Data attribute of the secret you get at the path of the CI user creds, ie all the
 // key-value fields that were set on it
-func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, error){
+func (val *VaultyImpl) GetUserAuthData(user string) (map[string]interface{}, error) {
 	path := fmt.Sprintf(VaultCIPath, user)
 	return val.GetVaultData(path)
 }
@@ -143,7 +193,6 @@ func (val *VaultyImpl) DeletePath(path string) error {
 	_, err := val.Client.Logical().Delete(fullPath)
 	return err
 }
-
 
 // CreateToken creates an Auth token using the val.Client's creds. Look at api.TokenCreateRequest docs
 // for how to configure the token. Will return any errors from the create request.
@@ -163,8 +212,8 @@ func (val *VaultyImpl) CreateToken(request *api.TokenCreateRequest) (token strin
 func (val *VaultyImpl) CreateThrowawayToken() (token string, err error) {
 	tokenReq := &api.TokenCreateRequest{
 		//Policies: 		[]string{"ocevault"}, // todo: figure out why this doesn't work...
-		TTL:            "30m",
-		NumUses:		3,
+		TTL:     "30m",
+		NumUses: 3,
 	}
 	//oce.Client.Auth().Token().Create(&api.})
 	return val.CreateToken(tokenReq)
@@ -180,14 +229,33 @@ func (val *VaultyImpl) CreateVaultPolicy() error {
 	return nil
 }
 
+// NotFound returns a ErrNotFound string wrapper
 func NotFound(msg string) *ErrNotFound {
-	return &ErrNotFound{msg:msg}
+	return &ErrNotFound{msg: msg}
 }
 
+// ErrNotFound is a string wrapping error type
 type ErrNotFound struct {
 	msg string
 }
 
+// Error returns the error message from ErrNotFound struct
 func (e *ErrNotFound) Error() string {
 	return e.msg
 }
+
+//// FIXME: We are not able to write tests that use Database Secret Engine until we can enable the backend in a test context.
+//// EnableDatabaseSecretEngine will enable the Database Secret Engine via the Vault api
+//func (val *VaultyImpl) EnableDatabaseSecretEngine(config map[string]interface{}) error {
+//
+//	mountInput := api.MountInput{}
+//
+//	//return secret, nil
+//	return val.Client.Sys().Mount("database/config/ocelot", &mountInput)
+//}
+//
+//// FIXME
+//// DisableDatabaseSecretEngine will disable the Database Secret Engine via the Vault api
+//func (val *VaultyImpl) DisableDatabaseSecretEngine() error {
+//	return nil
+//}
