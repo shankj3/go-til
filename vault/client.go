@@ -156,7 +156,7 @@ func (val *VaultyImpl) AddVaultData(path string, data map[string]interface{}) (*
 // GetVaultData Reads from a given Vault path, but only returns the Data element
 func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error) {
 	secret, err := val.Client.Logical().Read(path)
-	ocelog.Log().Debugf("Secret from Vault %v", secret)
+	ocelog.Log().Debugf("Getting secret at path %s", path)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (val *VaultyImpl) GetVaultData(path string) (map[string]interface{}, error)
 // GetVaultSecret Reads from a given Vault path. It is a lazy copy/paste of GetVaultData, but instead returns the full secret
 func (val *VaultyImpl) GetVaultSecret(path string) (*api.Secret, error) {
 	secret, err := val.Client.Logical().Read(path)
-	ocelog.Log().Debugf("Secret from Vault %v", secret)
+	ocelog.Log().Debugf("Getting secret at path %s", path)
 	if err != nil {
 		return nil, err
 	}
