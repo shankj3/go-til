@@ -35,6 +35,8 @@ type PbProduce struct {
     nsqpbConfig *NsqConfig
 }
 
+//DefaultProducer will create a nsq producer using default config settings (getting nsqd addresses from teh environment with LOCALHOST defaults)
+// it will also ping its configured nsqd to ensure that the producer has been configured correctly.
 func DefaultProducer() (producer *PbProduce, err error) {
     producer = &PbProduce{
         config:      nsq.NewConfig(),
@@ -45,6 +47,7 @@ func DefaultProducer() (producer *PbProduce, err error) {
         return
     }
     producer.Producer.SetLogger(NewNSQLoggerAtLevel(log.GetLogLevel()))
+    err = producer.Producer.Ping()
     return
 }
 
@@ -75,7 +78,7 @@ func (p *PbProduce) WriteProto(message proto.Message, topicName string) error {
 func GetInitProducer() *PbProduce {
     first, err := DefaultProducer()
     if err != nil {
-        log.IncludeErrField(err).Fatal("Producer must be initialized.")
+        log.IncludeErrField(err).Fatal("Producer must be initialized and configured correnctly.")
     }
     return first
 }
