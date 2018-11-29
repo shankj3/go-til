@@ -5,5 +5,5 @@ branches:
 stages:
   - name: test
     script:
-      - go install ./...
+      - echo "test."
 
