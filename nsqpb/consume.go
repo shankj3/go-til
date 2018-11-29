@@ -203,7 +203,7 @@ func (p *ProtoConsume) DeleteTopic(toRemove string) {
 func (p *ProtoConsume) WaitThenConsume(topic, channel string, handler HandleMessage, waitInterval int) {
 	for {
 		if !LookupTopic(p.Config.LookupDAddress(), topic) {
-			log.Log().Info("i am about to sleep for %d seconds because i couldn't find the topic %s at %s", waitInterval, topic, p.Config.LookupDAddress())
+			log.Log().Infof("i am about to sleep for %d seconds because i couldn't find the topic %s at %s", waitInterval, topic, p.Config.LookupDAddress())
 			time.Sleep(time.Duration(waitInterval) * time.Second)
 		} else {
 			log.Log().Debugf("I am about to listen, I found my topic %s", topic)
