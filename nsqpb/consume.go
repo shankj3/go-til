@@ -195,3 +195,25 @@ func (p *ProtoConsume) DeleteTopic(toRemove string) {
         }
     }
 }
+
+//WaitThenConsume will first ensure that the given topic exists by checking in lookupd (configured in ProtoConsume). If it doesn't exist,
+// then it will seep for waitInterval seconds. If it does exists, then it will set *ProtoConsume's Handler to handler and start (*ProtoConsume).ConsumeMessages
+// on the given topic and channel.
+// any errors encountered will be logged this function doesn't return anything.
+func (p *ProtoConsume) WaitThenConsume(topic, channel string, handler HandleMessage, waitInterval int) {
+	for {
+		if !LookupTopic(p.Config.LookupDAddress(), topic) {
+			log.Log().Info("i am about to sleep for %ds because i couldn't find the topic %s at %s", waitInterval, topic, p.Config.LookupDAddress())
+			time.Sleep(time.Duration(waitInterval) * time.Second)
+		} else {
+			log.Log().Debugf("I am about to listen, I found my topic %s", topic)
+			p.Handler = handler
+			if err := p.ConsumeMessages(topic, channel); err != nil {
+				log.IncludeErrField(err).Error("error consuming messages")
+				return
+			}
+			log.Log().Infof("Consuming messages for topic %s on channel %s", topic, channel)
+			break
+		}
+	}
+}
