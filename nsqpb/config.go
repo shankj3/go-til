@@ -17,7 +17,7 @@ var (
 	// defaults
 	defaultLookupDIP   = "127.0.0.1"
 	defaultNsqdIP	   = "127.0.0.1"
-	defaultNsqdPort    = "4250"
+	defaultNsqdPort    = "4150"
 	defaultLookupDPort = "4161"
 )
 
